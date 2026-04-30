@@ -7,6 +7,7 @@ import { renderTrainView } from "./views/train-view.js";
 import { renderGeometryView } from "./views/geometry-view.js";
 import { renderKinematicsView } from "./views/kinematics-view.js";
 import { renderLoadFamilyView } from "./views/load-generator-view.js";
+import { renderTrainPositionView } from "./views/case-grouping-view.js";
 
 async function loadJson(path) {
   const response = await fetch(path);
@@ -15,7 +16,7 @@ async function loadJson(path) {
 }
 
 async function bootstrap() {
-  const [codeSets, unitSystems, loadFamilyTypes, rideStates, exportTargets, statusOptions, designBasisSchema, geometrySchema, trainSchema, kinematicsSchema, loadFamilySchema, project, geometry, train, kinematics, loadFamilies] = await Promise.all([
+  const [codeSets, unitSystems, loadFamilyTypes, rideStates, exportTargets, statusOptions, designBasisSchema, geometrySchema, trainSchema, kinematicsSchema, loadFamilySchema, trainPositionSchema, project, geometry, train, kinematics, loadFamilies, trainPositions] = await Promise.all([
     loadJson(APP_CONFIG.dataPaths.codeSets),
     loadJson(APP_CONFIG.dataPaths.unitSystems),
     loadJson(APP_CONFIG.dataPaths.loadFamilyTypes),
@@ -27,11 +28,13 @@ async function bootstrap() {
     loadJson("shared/schemas/train-section.schema.json"),
     loadJson("shared/schemas/kinematics-profile.schema.json"),
     loadJson("shared/schemas/load-family-profile.schema.json"),
+    loadJson("shared/schemas/train-position-profile.schema.json"),
     loadJson("app/data/example-project.json"),
     loadJson("app/data/example-geometry.json"),
     loadJson("app/data/example-train.json"),
     loadJson("app/data/example-kinematics.json"),
-    loadJson("app/data/example-load-families.json")
+    loadJson("app/data/example-load-families.json"),
+    loadJson("app/data/example-train-positions.json")
   ]);
 
   const designBasis = project.designBasis ?? null;
@@ -46,13 +49,15 @@ async function bootstrap() {
     train,
     kinematics,
     loadFamilies,
+    trainPositions,
     validation: {
       designBasis: validateAgainstSchema(designBasisSchema, designBasis),
       geometry: validateAgainstSchema(geometrySchema, geometry),
       train: validateAgainstSchema(trainSchema, train),
       kinematics: validateAgainstSchema(kinematicsSchema, kinematics),
       loadFamilies: validateAgainstSchema(loadFamilySchema, loadFamilies),
-      requiredLoadFamilies: validateRequiredLoadFamilies(loadFamilies, requiredFamilyIds)
+      requiredLoadFamilies: validateRequiredLoadFamilies(loadFamilies, requiredFamilyIds),
+      trainPositions: validateAgainstSchema(trainPositionSchema, trainPositions)
     }
   });
 }
@@ -61,7 +66,7 @@ function render() {
   const root = document.querySelector("#app-root");
   const version = document.querySelector("#app-version");
   const state = getState();
-  const { initialized, project, designBasis, geometry, train, kinematics, loadFamilies, validation, lookups } = state;
+  const { initialized, project, designBasis, geometry, train, kinematics, loadFamilies, trainPositions, validation, lookups } = state;
 
   version.textContent = `v${APP_CONFIG.version}`;
 
@@ -86,6 +91,7 @@ function render() {
     ${renderTrainView({ train, validation: validation.train })}
     ${renderKinematicsView({ kinematics, validation: validation.kinematics })}
     ${renderLoadFamilyView({ loadFamilies, validation: validation.loadFamilies, lookups })}
+    ${renderTrainPositionView({ trainPositions, validation: validation.trainPositions })}
   `;
 }
 

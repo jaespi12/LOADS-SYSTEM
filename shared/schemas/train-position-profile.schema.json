@@ -1,0 +1,31 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "train-position-profile.schema.json",
+  "title": "Train Position Profile",
+  "type": "object",
+  "required": ["positionProfileId", "trainId", "referenceLineType", "stepLength", "startStation", "endStation", "repeatLength", "positions"],
+  "properties": {
+    "positionProfileId": { "type": "string", "minLength": 1 },
+    "trainId": { "type": "string", "minLength": 1 },
+    "referenceLineType": { "type": "string", "enum": ["TRACK_CENTERLINE", "RAIL_LEFT", "RAIL_RIGHT"] },
+    "stepLength": { "type": "number" },
+    "startStation": { "type": "number" },
+    "endStation": { "type": "number" },
+    "repeatLength": { "type": "number" },
+    "positions": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["positionId", "headStation", "tailStation"],
+        "properties": {
+          "positionId": { "type": "string", "minLength": 1 },
+          "headStation": { "type": "number" },
+          "tailStation": { "type": "number" }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": false
+}

@@ -1,7 +1,7 @@
 # Data Model Snapshot (Current Milestone)
 
 ## Purpose
-Define the in-memory package aggregation model used by the app shell before train-position generation.
+Define the in-memory package and generation-input contract model used before wheel-load or grouped-case math.
 
 ## Aggregated Package Sections
 The Home/Project Package summary aggregates and reports these sections:
@@ -11,41 +11,28 @@ The Home/Project Package summary aggregates and reports these sections:
 4. Kinematics
 5. Load Families
 
-Each section contributes:
-- data presence state (`missing` / `invalid` / `ready`),
-- schema validation status,
-- issue details for package-level visibility.
+## Generation-Input Contract (Train Position Profile)
+Train-position input is represented as a profile generated from fixed arc-length stepping assumptions.
 
-## Required Load Family Rule
-Completeness requires all `required: true` IDs from `shared/data/load-family-types.json`.
+Required fields:
+- `positionProfileId`
+- `trainId`
+- `referenceLineType`
+- `stepLength`
+- `startStation`
+- `endStation`
+- `repeatLength`
+- `positions[]`
 
-Current required baseline IDs:
-- `DEAD`
-- `LIVE`
-- `SEISMIC`
+Each position entry includes:
+- `positionId`
+- `headStation`
+- `tailStation`
 
-## In-Memory State Shape (Relevant)
-- `state.designBasis`
-- `state.geometry`
-- `state.train`
-- `state.kinematics`
-- `state.loadFamilies`
-- `state.validation.designBasis`
-- `state.validation.geometry`
-- `state.validation.train`
-- `state.validation.kinematics`
-- `state.validation.loadFamilies`
-- `state.validation.requiredLoadFamilies`
-
-## Completeness Logic
-A package is complete only when:
-- all five required sections are present,
-- section schema validations are valid,
-- required load-family presence check passes.
+## Validation Boundaries
+- Package completeness still requires all five core sections plus required load-family presence (`DEAD`, `LIVE`, `SEISMIC`).
+- Train-position profile is validated as a separate generation-input contract (`validation.trainPositions`).
 
 ## Guardrails
-- `app/tests/package-aggregation.test.js` covers:
-  - missing package section,
-  - invalid package section,
-  - missing required load family (`SEISMIC`).
-- `scripts/check-drift.js` checks practical lookup/schema/fixture consistency for load-family IDs and required baseline presence.
+- Drift and package checks remain active.
+- Train-position view currently provides load/read/validate/render visibility only.
