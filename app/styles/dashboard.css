@@ -1,1 +1,4 @@
-
+.app-main {
+  display: grid;
+  gap: 1rem;
+}

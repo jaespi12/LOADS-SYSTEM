@@ -1,1 +1,18 @@
-
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "risa-export.schema.json",
+  "title": "RISA Export Package",
+  "type": "object",
+  "required": ["version", "projectId", "unitSystem", "loadCases"],
+  "properties": {
+    "version": { "type": "string" },
+    "projectId": { "type": "string" },
+    "unitSystem": { "type": "string" },
+    "generatedAt": { "type": "string", "format": "date-time" },
+    "loadCases": {
+      "type": "array",
+      "items": { "$ref": "load-case.schema.json" }
+    }
+  },
+  "additionalProperties": false
+}

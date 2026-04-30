@@ -1,1 +1,21 @@
+.app-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  padding: 1.25rem 0;
+}
 
+#app-version {
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.app-main {
+  display: grid;
+  gap: 1rem;
+  padding-bottom: 2rem;
+}
+
+.muted {
+  color: var(--muted);
+}

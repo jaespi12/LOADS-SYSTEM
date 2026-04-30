@@ -1,1 +1,10 @@
-
+{
+  "profileId": "KIN-BASE-01",
+  "source": "Concept Alignment Study",
+  "revision": "R0",
+  "entries": [
+    { "station": 0, "speed": 65, "cantDeficiency": 0.5 },
+    { "station": 25, "speed": 70, "cantDeficiency": 0.8 },
+    { "station": 50, "speed": 72, "cantDeficiency": 1.1 }
+  ]
+}

@@ -1,1 +1,12 @@
-
+{
+  "projectId": "DEMO-PROJ-001",
+  "name": "Starter Corridor Project",
+  "designBasis": {
+    "id": "DB-001",
+    "name": "Baseline Vertical + Lateral Load Basis",
+    "codeSet": "AREMA",
+    "unitSystem": "US_CUSTOMARY",
+    "status": "DRAFT",
+    "notes": "Starter design basis loaded from local example project fixture."
+  }
+}

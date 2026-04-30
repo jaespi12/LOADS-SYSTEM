@@ -1,1 +1,8 @@
-
+{
+  "states": [
+    { "id": "EMPTY", "label": "Empty" },
+    { "id": "SEATED", "label": "Seated" },
+    { "id": "STANDEES", "label": "Seated + Standees" },
+    { "id": "CRUSH", "label": "Crush Loaded" }
+  ]
+}

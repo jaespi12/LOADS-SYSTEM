@@ -1,1 +1,12 @@
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: Inter, system-ui, sans-serif;
+}
 
+.app-header,
+.app-main {
+  width: min(1100px, 92vw);
+  margin: 0 auto;
+}
