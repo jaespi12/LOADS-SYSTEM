@@ -2,6 +2,7 @@ import { APP_CONFIG } from "./config.js";
 import { getState, setState, subscribe } from "./store.js";
 import { validateAgainstSchema } from "./utils/validation.js";
 import { renderDesignBasisView } from "./views/design-basis-view.js";
+import { renderTrainView } from "./views/train-view.js";
 
 async function loadJson(path) {
   const response = await fetch(path);
@@ -10,7 +11,7 @@ async function loadJson(path) {
 }
 
 async function bootstrap() {
-  const [codeSets, unitSystems, loadFamilyTypes, rideStates, exportTargets, statusOptions, designBasisSchema, project] = await Promise.all([
+  const [codeSets, unitSystems, loadFamilyTypes, rideStates, exportTargets, statusOptions, designBasisSchema, trainSchema, project, train] = await Promise.all([
     loadJson(APP_CONFIG.dataPaths.codeSets),
     loadJson(APP_CONFIG.dataPaths.unitSystems),
     loadJson(APP_CONFIG.dataPaths.loadFamilyTypes),
@@ -18,19 +19,22 @@ async function bootstrap() {
     loadJson(APP_CONFIG.dataPaths.exportTargets),
     loadJson(APP_CONFIG.dataPaths.statusOptions),
     loadJson("shared/schemas/design-basis.schema.json"),
-    loadJson("app/data/example-project.json")
+    loadJson("shared/schemas/train-section.schema.json"),
+    loadJson("app/data/example-project.json"),
+    loadJson("app/data/example-train.json")
   ]);
 
   const designBasis = project.designBasis ?? null;
-  const designBasisValidation = validateAgainstSchema(designBasisSchema, designBasis);
 
   setState({
     initialized: true,
     lookups: { codeSets, unitSystems, loadFamilyTypes, rideStates, exportTargets, statusOptions },
     project,
     designBasis,
+    train,
     validation: {
-      designBasis: designBasisValidation
+      designBasis: validateAgainstSchema(designBasisSchema, designBasis),
+      train: validateAgainstSchema(trainSchema, train)
     }
   });
 }
@@ -38,12 +42,12 @@ async function bootstrap() {
 function render() {
   const root = document.querySelector("#app-root");
   const version = document.querySelector("#app-version");
-  const { initialized, project, designBasis, validation } = getState();
+  const { initialized, project, designBasis, train, validation, lookups } = getState();
 
   version.textContent = `v${APP_CONFIG.version}`;
 
   if (!initialized) {
-    root.innerHTML = `<section class="card"><h2>Loading…</h2><p class="muted">Loading lookups, schemas, and example project.</p></section>`;
+    root.innerHTML = `<section class="card"><h2>Loading…</h2><p class="muted">Loading lookups, schemas, and example data.</p></section>`;
     return;
   }
 
@@ -55,7 +59,8 @@ function render() {
       </div>
       <p><strong>Name:</strong> ${project.name ?? "Unnamed project"}</p>
     </section>
-    ${renderDesignBasisView({ designBasis, validation: validation.designBasis })}
+    ${renderDesignBasisView({ designBasis, validation: validation.designBasis, lookups })}
+    ${renderTrainView({ train, validation: validation.train })}
   `;
 }
 

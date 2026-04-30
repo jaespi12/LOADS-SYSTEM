@@ -3,8 +3,10 @@ const state = {
   lookups: {},
   project: null,
   designBasis: null,
+  train: null,
   validation: {
-    designBasis: { valid: false, errors: ["Design basis has not been validated yet."] }
+    designBasis: { valid: false, errors: ["Design basis has not been validated yet."] },
+    train: { valid: false, errors: ["Train has not been validated yet."] }
   }
 };
 

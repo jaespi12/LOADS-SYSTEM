@@ -1,1 +1,28 @@
-
+{
+  "trainId": "TRN-001",
+  "trainName": "Passenger Baseline Set",
+  "sections": [
+    {
+      "id": "SEC-LEAD",
+      "name": "Lead Car",
+      "length": 82,
+      "axles": [
+        { "offset": 8, "load": 17.5 },
+        { "offset": 22, "load": 17.5 },
+        { "offset": 60, "load": 18.1 },
+        { "offset": 74, "load": 18.1 }
+      ]
+    },
+    {
+      "id": "SEC-TRAIL",
+      "name": "Trailing Car",
+      "length": 82,
+      "axles": [
+        { "offset": 8, "load": 16.9 },
+        { "offset": 22, "load": 16.9 },
+        { "offset": 60, "load": 17.2 },
+        { "offset": 74, "load": 17.2 }
+      ]
+    }
+  ]
+}
