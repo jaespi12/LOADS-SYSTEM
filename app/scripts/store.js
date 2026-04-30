@@ -4,9 +4,11 @@ const state = {
   project: null,
   designBasis: null,
   train: null,
+  kinematics: null,
   validation: {
     designBasis: { valid: false, errors: ["Design basis has not been validated yet."] },
-    train: { valid: false, errors: ["Train has not been validated yet."] }
+    train: { valid: false, errors: ["Train has not been validated yet."] },
+    kinematics: { valid: false, errors: ["Kinematics has not been validated yet."] }
   }
 };
 

@@ -70,3 +70,7 @@
   margin: 0.3rem 0;
   color: #dbeafe;
 }
+
+.panel-kinematics {
+  border-left: 3px solid #34d399;
+}
