@@ -1,6 +1,7 @@
 import { APP_CONFIG } from "./config.js";
 import { getState, setState, subscribe } from "./store.js";
-import { validateAgainstSchema } from "./utils/validation.js";
+import { validateAgainstSchema, validateRequiredLoadFamilies } from "./utils/validation.js";
+import { renderHomeView, buildPackageSummary } from "./views/home-view.js";
 import { renderDesignBasisView } from "./views/design-basis-view.js";
 import { renderTrainView } from "./views/train-view.js";
 import { renderKinematicsView } from "./views/kinematics-view.js";
@@ -13,7 +14,7 @@ async function loadJson(path) {
 }
 
 async function bootstrap() {
-  const [codeSets, unitSystems, loadFamilyTypes, rideStates, exportTargets, statusOptions, designBasisSchema, trainSchema, kinematicsSchema, loadFamilySchema, project, train, kinematics, loadFamilies] = await Promise.all([
+  const [codeSets, unitSystems, loadFamilyTypes, rideStates, exportTargets, statusOptions, designBasisSchema, geometrySchema, trainSchema, kinematicsSchema, loadFamilySchema, project, geometry, train, kinematics, loadFamilies] = await Promise.all([
     loadJson(APP_CONFIG.dataPaths.codeSets),
     loadJson(APP_CONFIG.dataPaths.unitSystems),
     loadJson(APP_CONFIG.dataPaths.loadFamilyTypes),
@@ -21,30 +22,36 @@ async function bootstrap() {
     loadJson(APP_CONFIG.dataPaths.exportTargets),
     loadJson(APP_CONFIG.dataPaths.statusOptions),
     loadJson("shared/schemas/design-basis.schema.json"),
+    loadJson("shared/schemas/geometry-station.schema.json"),
     loadJson("shared/schemas/train-section.schema.json"),
     loadJson("shared/schemas/kinematics-profile.schema.json"),
     loadJson("shared/schemas/load-family-profile.schema.json"),
     loadJson("app/data/example-project.json"),
+    loadJson("app/data/example-geometry.json"),
     loadJson("app/data/example-train.json"),
     loadJson("app/data/example-kinematics.json"),
     loadJson("app/data/example-load-families.json")
   ]);
 
   const designBasis = project.designBasis ?? null;
+  const requiredFamilyIds = (loadFamilyTypes.families ?? []).filter((f) => f.required).map((f) => f.id);
 
   setState({
     initialized: true,
     lookups: { codeSets, unitSystems, loadFamilyTypes, rideStates, exportTargets, statusOptions },
     project,
     designBasis,
+    geometry,
     train,
     kinematics,
     loadFamilies,
     validation: {
       designBasis: validateAgainstSchema(designBasisSchema, designBasis),
+      geometry: validateAgainstSchema(geometrySchema, geometry),
       train: validateAgainstSchema(trainSchema, train),
       kinematics: validateAgainstSchema(kinematicsSchema, kinematics),
-      loadFamilies: validateAgainstSchema(loadFamilySchema, loadFamilies)
+      loadFamilies: validateAgainstSchema(loadFamilySchema, loadFamilies),
+      requiredLoadFamilies: validateRequiredLoadFamilies(loadFamilies, requiredFamilyIds)
     }
   });
 }
@@ -52,7 +59,8 @@ async function bootstrap() {
 function render() {
   const root = document.querySelector("#app-root");
   const version = document.querySelector("#app-version");
-  const { initialized, project, designBasis, train, kinematics, loadFamilies, validation, lookups } = getState();
+  const state = getState();
+  const { initialized, project, designBasis, train, kinematics, loadFamilies, validation, lookups } = state;
 
   version.textContent = `v${APP_CONFIG.version}`;
 
@@ -61,7 +69,10 @@ function render() {
     return;
   }
 
+  const packageSummary = buildPackageSummary(state);
+
   root.innerHTML = `
+    ${renderHomeView({ packageSummary })}
     <section class="card">
       <div class="panel-header-row">
         <h2>Project</h2>

@@ -20,13 +20,8 @@ function validateByRule(rule, value, fieldPath) {
 }
 
 function validateObject(schema, candidate, pathPrefix = "") {
-  if (!schema || schema.type !== "object") {
-    return ["Schema is missing or unsupported."];
-  }
-
-  if (candidate === null || typeof candidate !== "object" || Array.isArray(candidate)) {
-    return [`${pathPrefix || "value"} must be an object.`];
-  }
+  if (!schema || schema.type !== "object") return ["Schema is missing or unsupported."];
+  if (candidate === null || typeof candidate !== "object" || Array.isArray(candidate)) return [`${pathPrefix || "value"} must be an object.`];
 
   const errors = [];
   const required = Array.isArray(schema.required) ? schema.required : [];
@@ -55,9 +50,7 @@ function validateObject(schema, candidate, pathPrefix = "") {
         errors.push(`${fieldPath}: must contain at least ${rule.minItems} items`);
       }
       if (rule.items?.type === "object") {
-        value.forEach((item, index) => {
-          errors.push(...validateObject(rule.items, item, `${fieldPath}[${index}].`));
-        });
+        value.forEach((item, index) => errors.push(...validateObject(rule.items, item, `${fieldPath}[${index}].`)));
       }
       return;
     }
@@ -71,4 +64,18 @@ function validateObject(schema, candidate, pathPrefix = "") {
 export function validateAgainstSchema(schema, candidate) {
   const errors = validateObject(schema, candidate);
   return { valid: errors.length === 0, errors };
+}
+
+export function validateRequiredLoadFamilies(loadFamilies, requiredFamilyIds = []) {
+  const selected = new Set((loadFamilies?.families ?? []).map((f) => f.familyId));
+  const missing = requiredFamilyIds.filter((id) => !selected.has(id));
+
+  if (!requiredFamilyIds.length) {
+    return { valid: false, errors: ["No required load-family IDs configured."] };
+  }
+
+  return {
+    valid: missing.length === 0,
+    errors: missing.map((id) => `Missing required load family: ${id}`)
+  };
 }
