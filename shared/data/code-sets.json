@@ -1,7 +1,29 @@
 {
   "codes": [
-    { "id": "AREMA", "label": "AREMA", "region": "US" },
-    { "id": "EN", "label": "Eurocode", "region": "EU" },
-    { "id": "AS", "label": "AS Standards", "region": "AU" }
+    {
+      "id": "ASCE-SEI-7-22",
+      "label": "ASCE/SEI 7-22 Minimum Design Loads and Associated Criteria for Buildings and Other Structures",
+      "discipline": "Loads"
+    },
+    {
+      "id": "ANSI-AISC-360-22",
+      "label": "ANSI/AISC 360-22 Specification for Structural Steel Buildings",
+      "discipline": "Steel Design"
+    },
+    {
+      "id": "ANSI-AISC-341-22",
+      "label": "ANSI/AISC 341-22 Seismic Provisions for Structural Steel Buildings",
+      "discipline": "Seismic Steel"
+    },
+    {
+      "id": "ACI-CODE-318-25",
+      "label": "ACI CODE-318-25 Building Code Requirements for Structural Concrete",
+      "discipline": "Concrete Design"
+    },
+    {
+      "id": "ASTM-F2291-25C",
+      "label": "ASTM F2291-25c Standard Practice for Design of Amusement Rides and Devices",
+      "discipline": "Ride Systems"
+    }
   ]
 }

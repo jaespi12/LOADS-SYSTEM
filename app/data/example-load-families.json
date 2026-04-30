@@ -2,6 +2,7 @@
   "families": [
     { "familyId": "DEAD", "status": "APPROVED", "sourceType": "REFERENCE" },
     { "familyId": "LIVE", "status": "IN_REVIEW", "sourceType": "MANUAL" },
+    { "familyId": "SEISMIC", "status": "DRAFT", "sourceType": "GENERATED" },
     { "familyId": "IMPACT", "status": "DRAFT", "sourceType": "GENERATED" }
   ]
 }

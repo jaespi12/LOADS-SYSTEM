@@ -1,9 +1,10 @@
 {
   "families": [
-    { "id": "DEAD", "label": "Dead Load", "dynamic": false },
-    { "id": "LIVE", "label": "Live Load", "dynamic": false },
-    { "id": "IMPACT", "label": "Impact", "dynamic": true },
-    { "id": "BRAKING", "label": "Braking", "dynamic": true },
-    { "id": "WIND", "label": "Wind", "dynamic": true }
+    { "id": "DEAD", "label": "Dead Load", "dynamic": false, "required": true },
+    { "id": "LIVE", "label": "Live Load", "dynamic": false, "required": true },
+    { "id": "IMPACT", "label": "Impact", "dynamic": true, "required": false },
+    { "id": "BRAKING", "label": "Braking", "dynamic": true, "required": false },
+    { "id": "WIND", "label": "Wind", "dynamic": true, "required": false },
+    { "id": "SEISMIC", "label": "Seismic", "dynamic": true, "required": true }
   ]
 }
