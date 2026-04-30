@@ -1,7 +1,58 @@
-.card h2 {
+.card h2,
+.card h3 {
   margin-top: 0;
 }
 
 .card.error {
   border-color: var(--danger);
+}
+
+.panel-header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.kv-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 0.5rem 1rem;
+}
+
+.kv-grid dt {
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
+.kv-grid dd {
+  margin: 0.2rem 0 0;
+  font-weight: 600;
+}
+
+.status-pill {
+  border: 1px solid currentColor;
+  border-radius: 999px;
+  padding: 0.2rem 0.65rem;
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.status-ok {
+  color: #22c55e;
+}
+
+.status-bad {
+  color: #f97316;
+}
+
+.error-list {
+  margin: 0;
+  padding-left: 1.1rem;
+  color: #fca5a5;
+}
+
+.ok {
+  color: #86efac;
 }

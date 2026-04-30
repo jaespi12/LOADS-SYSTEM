@@ -2,15 +2,33 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "design-basis.schema.json",
   "title": "Design Basis",
+  "description": "Project-level design basis metadata and governing reference selections.",
   "type": "object",
   "required": ["id", "name", "codeSet", "unitSystem", "status"],
   "properties": {
-    "id": { "type": "string" },
-    "name": { "type": "string" },
-    "codeSet": { "type": "string" },
-    "unitSystem": { "type": "string" },
-    "status": { "type": "string" },
-    "notes": { "type": "string" }
+    "id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "name": {
+      "type": "string",
+      "minLength": 1
+    },
+    "codeSet": {
+      "type": "string",
+      "minLength": 1
+    },
+    "unitSystem": {
+      "type": "string",
+      "minLength": 1
+    },
+    "status": {
+      "type": "string",
+      "minLength": 1
+    },
+    "notes": {
+      "type": "string"
+    }
   },
   "additionalProperties": false
 }

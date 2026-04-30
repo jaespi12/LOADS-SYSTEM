@@ -1,6 +1,11 @@
 const state = {
   initialized: false,
-  lookups: {}
+  lookups: {},
+  project: null,
+  designBasis: null,
+  validation: {
+    designBasis: { valid: false, errors: ["Design basis has not been validated yet."] }
+  }
 };
 
 const listeners = new Set();

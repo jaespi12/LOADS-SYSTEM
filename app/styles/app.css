@@ -9,3 +9,13 @@
   color: var(--muted);
   font-size: 0.9rem;
 }
+
+.app-main {
+  display: grid;
+  gap: 1rem;
+  padding-bottom: 2rem;
+}
+
+.muted {
+  color: var(--muted);
+}
