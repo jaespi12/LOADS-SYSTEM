@@ -1,43 +1,39 @@
 # LOADS-SYSTEM Implementation Plan
 
 ## Goal
-Deliver a practical, incremental path from app-shell validation to export-ready package assembly using current repository structure.
+Deliver a practical, incremental path from validated package aggregation to train-position generation readiness.
 
 ## Constraints
 - Use plain JavaScript ES modules.
-- Do not introduce engineering formulas in milestone docs or runtime.
-- Keep milestones contract-driven and schema-backed.
+- No engineering formulas in this stage.
+- Focus on visibility, validation, and guardrails.
 
-## Current Milestone Status
-Completed baseline aggregation/read/validate/render flow for a Project Package summary with completeness checks across design basis, geometry, train, kinematics, and load families.
+## Current Milestone (Completed)
+Project Package aggregation now includes explicit domain visibility for geometry plus package-level completeness checks and basic guardrail tests/scripts.
 
-## Phase 1 — Package Aggregation Hardening (current)
+## Phase 1 — Aggregation Guardrails (current)
 ### Objectives
-- Keep all core input sections loadable and validated at startup.
-- Surface missing/invalid sections in a single package-level Home view.
+- Render each required section as a visible domain panel (including Geometry).
+- Surface package completeness and missing/invalid sections in Home view.
 - Enforce required load-family presence (`DEAD`, `LIVE`, `SEISMIC`).
+- Add lightweight tests and drift checks.
 
 ### Deliverables
-- Project Package completeness panel.
-- Section-level readiness summary.
-- Required load-family presence check in validation state.
+- Geometry panel rendered in runtime UI.
+- Package aggregation tests for missing/invalid/required-family cases.
+- Drift-check script for lookup/schema/fixture consistency.
 
-## Phase 2 — Editability and Controlled Mutations
-### Objectives
-- Add explicit edit flows for each section with deterministic validation-on-change.
-- Track revision metadata per section.
+## Phase 2 — Controlled Editability
+- Add deterministic edit flows with immediate validation for each section.
+- Add revision metadata and change trace to section state.
 
-## Phase 3 — Generation Orchestration (formula-free scaffolding)
-### Objectives
-- Build orchestration contracts and run metadata for future engines.
-- Keep generation placeholders visible without implementing formulas.
+## Phase 3 — Train-Position Generation Preparation
+- Define input contract for train-position generation.
+- Add pre-generation readiness checks that reuse package completeness status.
 
-## Phase 4 — Export Package Assembly
-### Objectives
-- Map validated in-memory package to export contracts.
-- Validate export payloads against shared schemas before packaging.
+## Phase 4 — Generation and Export Wiring (future)
+- Connect generation orchestration after input contract sign-off.
+- Validate generated outputs before export packaging.
 
-## Phase 5 — QA Automation and Drift Controls
-### Objectives
-- Add automated drift checks between shared data, schemas, fixtures, and docs.
-- Add validation-focused test harness around package completeness rules.
+## Remaining Principle
+Keep generation blocked until package completeness and guardrail checks are consistently green.

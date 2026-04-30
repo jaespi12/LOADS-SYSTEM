@@ -4,6 +4,7 @@ import { validateAgainstSchema, validateRequiredLoadFamilies } from "./utils/val
 import { renderHomeView, buildPackageSummary } from "./views/home-view.js";
 import { renderDesignBasisView } from "./views/design-basis-view.js";
 import { renderTrainView } from "./views/train-view.js";
+import { renderGeometryView } from "./views/geometry-view.js";
 import { renderKinematicsView } from "./views/kinematics-view.js";
 import { renderLoadFamilyView } from "./views/load-generator-view.js";
 
@@ -60,7 +61,7 @@ function render() {
   const root = document.querySelector("#app-root");
   const version = document.querySelector("#app-version");
   const state = getState();
-  const { initialized, project, designBasis, train, kinematics, loadFamilies, validation, lookups } = state;
+  const { initialized, project, designBasis, geometry, train, kinematics, loadFamilies, validation, lookups } = state;
 
   version.textContent = `v${APP_CONFIG.version}`;
 
@@ -81,6 +82,7 @@ function render() {
       <p><strong>Name:</strong> ${project.name ?? "Unnamed project"}</p>
     </section>
     ${renderDesignBasisView({ designBasis, validation: validation.designBasis, lookups })}
+    ${renderGeometryView({ geometry, validation: validation.geometry })}
     ${renderTrainView({ train, validation: validation.train })}
     ${renderKinematicsView({ kinematics, validation: validation.kinematics })}
     ${renderLoadFamilyView({ loadFamilies, validation: validation.loadFamilies, lookups })}
