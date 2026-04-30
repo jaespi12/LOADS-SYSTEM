@@ -1,1 +1,7 @@
+.card h2 {
+  margin-top: 0;
+}
 
+.card.error {
+  border-color: var(--danger);
+}

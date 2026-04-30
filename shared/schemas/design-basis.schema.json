@@ -1,1 +1,16 @@
-
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "design-basis.schema.json",
+  "title": "Design Basis",
+  "type": "object",
+  "required": ["id", "name", "codeSet", "unitSystem", "status"],
+  "properties": {
+    "id": { "type": "string" },
+    "name": { "type": "string" },
+    "codeSet": { "type": "string" },
+    "unitSystem": { "type": "string" },
+    "status": { "type": "string" },
+    "notes": { "type": "string" }
+  },
+  "additionalProperties": false
+}

@@ -1,1 +1,9 @@
-
+{
+  "families": [
+    { "id": "DEAD", "label": "Dead Load", "dynamic": false },
+    { "id": "LIVE", "label": "Live Load", "dynamic": false },
+    { "id": "IMPACT", "label": "Impact", "dynamic": true },
+    { "id": "BRAKING", "label": "Braking", "dynamic": true },
+    { "id": "WIND", "label": "Wind", "dynamic": true }
+  ]
+}

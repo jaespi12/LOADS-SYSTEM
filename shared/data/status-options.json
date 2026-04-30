@@ -1,1 +1,8 @@
-
+{
+  "statuses": [
+    { "id": "DRAFT", "label": "Draft" },
+    { "id": "IN_REVIEW", "label": "In Review" },
+    { "id": "APPROVED", "label": "Approved" },
+    { "id": "SUPERSEDED", "label": "Superseded" }
+  ]
+}

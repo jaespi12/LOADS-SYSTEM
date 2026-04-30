@@ -1,1 +1,19 @@
-
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "load-case.schema.json",
+  "title": "Load Case",
+  "type": "object",
+  "required": ["id", "name", "family", "status", "factors"],
+  "properties": {
+    "id": { "type": "string" },
+    "name": { "type": "string" },
+    "family": { "type": "string" },
+    "status": { "type": "string" },
+    "rideState": { "type": "string" },
+    "factors": {
+      "type": "object",
+      "additionalProperties": { "type": "number" }
+    }
+  },
+  "additionalProperties": false
+}

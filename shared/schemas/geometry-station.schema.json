@@ -1,1 +1,15 @@
-
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "geometry-station.schema.json",
+  "title": "Geometry Station",
+  "type": "object",
+  "required": ["station", "x", "y", "z"],
+  "properties": {
+    "station": { "type": "number" },
+    "x": { "type": "number" },
+    "y": { "type": "number" },
+    "z": { "type": "number" },
+    "curveRadius": { "type": "number" }
+  },
+  "additionalProperties": false
+}

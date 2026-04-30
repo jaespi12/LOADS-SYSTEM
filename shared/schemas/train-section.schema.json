@@ -1,1 +1,25 @@
-
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "train-section.schema.json",
+  "title": "Train Section",
+  "type": "object",
+  "required": ["id", "name", "length", "axles"],
+  "properties": {
+    "id": { "type": "string" },
+    "name": { "type": "string" },
+    "length": { "type": "number", "exclusiveMinimum": 0 },
+    "axles": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["offset", "load"],
+        "properties": {
+          "offset": { "type": "number" },
+          "load": { "type": "number", "minimum": 0 }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": false
+}

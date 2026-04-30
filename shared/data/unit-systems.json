@@ -1,1 +1,18 @@
-
+{
+  "systems": [
+    {
+      "id": "US_CUSTOMARY",
+      "label": "US Customary",
+      "length": "ft",
+      "force": "kip",
+      "moment": "kip-ft"
+    },
+    {
+      "id": "SI",
+      "label": "SI Metric",
+      "length": "m",
+      "force": "kN",
+      "moment": "kN-m"
+    }
+  ]
+}

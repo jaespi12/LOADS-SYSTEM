@@ -1,1 +1,7 @@
-
+{
+  "targets": [
+    { "id": "RISA_3D", "label": "RISA-3D" },
+    { "id": "CSV", "label": "CSV" },
+    { "id": "JSON", "label": "JSON" }
+  ]
+}

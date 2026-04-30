@@ -1,1 +1,7 @@
-
+{
+  "codes": [
+    { "id": "AREMA", "label": "AREMA", "region": "US" },
+    { "id": "EN", "label": "Eurocode", "region": "EU" },
+    { "id": "AS", "label": "AS Standards", "region": "AU" }
+  ]
+}
