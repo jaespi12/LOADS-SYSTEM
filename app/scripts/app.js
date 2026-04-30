@@ -4,6 +4,7 @@ import { validateAgainstSchema } from "./utils/validation.js";
 import { renderDesignBasisView } from "./views/design-basis-view.js";
 import { renderTrainView } from "./views/train-view.js";
 import { renderKinematicsView } from "./views/kinematics-view.js";
+import { renderLoadFamilyView } from "./views/load-generator-view.js";
 
 async function loadJson(path) {
   const response = await fetch(path);
@@ -12,7 +13,7 @@ async function loadJson(path) {
 }
 
 async function bootstrap() {
-  const [codeSets, unitSystems, loadFamilyTypes, rideStates, exportTargets, statusOptions, designBasisSchema, trainSchema, kinematicsSchema, project, train, kinematics] = await Promise.all([
+  const [codeSets, unitSystems, loadFamilyTypes, rideStates, exportTargets, statusOptions, designBasisSchema, trainSchema, kinematicsSchema, loadFamilySchema, project, train, kinematics, loadFamilies] = await Promise.all([
     loadJson(APP_CONFIG.dataPaths.codeSets),
     loadJson(APP_CONFIG.dataPaths.unitSystems),
     loadJson(APP_CONFIG.dataPaths.loadFamilyTypes),
@@ -22,9 +23,11 @@ async function bootstrap() {
     loadJson("shared/schemas/design-basis.schema.json"),
     loadJson("shared/schemas/train-section.schema.json"),
     loadJson("shared/schemas/kinematics-profile.schema.json"),
+    loadJson("shared/schemas/load-family-profile.schema.json"),
     loadJson("app/data/example-project.json"),
     loadJson("app/data/example-train.json"),
-    loadJson("app/data/example-kinematics.json")
+    loadJson("app/data/example-kinematics.json"),
+    loadJson("app/data/example-load-families.json")
   ]);
 
   const designBasis = project.designBasis ?? null;
@@ -36,10 +39,12 @@ async function bootstrap() {
     designBasis,
     train,
     kinematics,
+    loadFamilies,
     validation: {
       designBasis: validateAgainstSchema(designBasisSchema, designBasis),
       train: validateAgainstSchema(trainSchema, train),
-      kinematics: validateAgainstSchema(kinematicsSchema, kinematics)
+      kinematics: validateAgainstSchema(kinematicsSchema, kinematics),
+      loadFamilies: validateAgainstSchema(loadFamilySchema, loadFamilies)
     }
   });
 }
@@ -47,7 +52,7 @@ async function bootstrap() {
 function render() {
   const root = document.querySelector("#app-root");
   const version = document.querySelector("#app-version");
-  const { initialized, project, designBasis, train, kinematics, validation, lookups } = getState();
+  const { initialized, project, designBasis, train, kinematics, loadFamilies, validation, lookups } = getState();
 
   version.textContent = `v${APP_CONFIG.version}`;
 
@@ -67,6 +72,7 @@ function render() {
     ${renderDesignBasisView({ designBasis, validation: validation.designBasis, lookups })}
     ${renderTrainView({ train, validation: validation.train })}
     ${renderKinematicsView({ kinematics, validation: validation.kinematics })}
+    ${renderLoadFamilyView({ loadFamilies, validation: validation.loadFamilies, lookups })}
   `;
 }
 

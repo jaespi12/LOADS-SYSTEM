@@ -5,10 +5,12 @@ const state = {
   designBasis: null,
   train: null,
   kinematics: null,
+  loadFamilies: null,
   validation: {
     designBasis: { valid: false, errors: ["Design basis has not been validated yet."] },
     train: { valid: false, errors: ["Train has not been validated yet."] },
-    kinematics: { valid: false, errors: ["Kinematics has not been validated yet."] }
+    kinematics: { valid: false, errors: ["Kinematics has not been validated yet."] },
+    loadFamilies: { valid: false, errors: ["Load families have not been validated yet."] }
   }
 };
 
