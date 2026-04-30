@@ -1,6 +1,6 @@
 import { APP_CONFIG } from "./config.js";
 import { getState, setState, subscribe } from "./store.js";
-import { validateAgainstSchema, validateRequiredLoadFamilies } from "./utils/validation.js";
+import { validateAgainstSchema, validateRequiredLoadFamilies, validateGroupedCaseReadiness } from "./utils/validation.js";
 import { renderHomeView, buildPackageSummary } from "./views/home-view.js";
 import { renderDesignBasisView } from "./views/design-basis-view.js";
 import { renderTrainView } from "./views/train-view.js";
@@ -57,7 +57,8 @@ async function bootstrap() {
       kinematics: validateAgainstSchema(kinematicsSchema, kinematics),
       loadFamilies: validateAgainstSchema(loadFamilySchema, loadFamilies),
       requiredLoadFamilies: validateRequiredLoadFamilies(loadFamilies, requiredFamilyIds),
-      trainPositions: validateAgainstSchema(trainPositionSchema, trainPositions)
+      trainPositions: validateAgainstSchema(trainPositionSchema, trainPositions),
+      groupedCaseReadiness: validateGroupedCaseReadiness({ train, geometry, trainPositions })
     }
   });
 }
@@ -91,7 +92,7 @@ function render() {
     ${renderTrainView({ train, validation: validation.train })}
     ${renderKinematicsView({ kinematics, validation: validation.kinematics })}
     ${renderLoadFamilyView({ loadFamilies, validation: validation.loadFamilies, lookups })}
-    ${renderTrainPositionView({ trainPositions, validation: validation.trainPositions })}
+    ${renderTrainPositionView({ trainPositions, validation: validation.trainPositions, readiness: validation.groupedCaseReadiness })}
   `;
 }
 

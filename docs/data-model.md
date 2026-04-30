@@ -1,20 +1,20 @@
 # Data Model Snapshot (Current Milestone)
 
 ## Purpose
-Define the in-memory package and generation-input contract model used before wheel-load or grouped-case math.
+Define package and grouped-case readiness validation contracts before grouped-case math is enabled.
 
 ## Aggregated Package Sections
-The Home/Project Package summary aggregates and reports these sections:
+The package summary continues to aggregate:
 1. Design Basis
 2. Geometry
 3. Train
 4. Kinematics
 5. Load Families
 
-## Generation-Input Contract (Train Position Profile)
-Train-position input is represented as a profile generated from fixed arc-length stepping assumptions.
+## Train-Position Generation Input Contract
+Train-position profile is generated from fixed arc-length stepping assumptions and validated via schema.
 
-Required fields:
+Key profile fields:
 - `positionProfileId`
 - `trainId`
 - `referenceLineType`
@@ -22,17 +22,19 @@ Required fields:
 - `startStation`
 - `endStation`
 - `repeatLength`
-- `positions[]`
+- `positions[]` with `positionId`, `headStation`, `tailStation`
 
-Each position entry includes:
-- `positionId`
-- `headStation`
-- `tailStation`
+## Grouped-Case Readiness Validation
+Readiness status is derived from cross-contract checks:
+- Presence of `train`, `geometry`, and `trainPositions`.
+- Geometry coverage checks for `startStation`, `endStation`, and each `positions[*].headStation`.
+- Repeat-length consistency check against summed train section length (warning-level where mismatch exists).
 
-## Validation Boundaries
-- Package completeness still requires all five core sections plus required load-family presence (`DEAD`, `LIVE`, `SEISMIC`).
-- Train-position profile is validated as a separate generation-input contract (`validation.trainPositions`).
+Readiness state shape:
+- `validation.groupedCaseReadiness.valid`
+- `validation.groupedCaseReadiness.blockingIssues[]`
+- `validation.groupedCaseReadiness.warnings[]`
 
-## Guardrails
-- Drift and package checks remain active.
-- Train-position view currently provides load/read/validate/render visibility only.
+## Readiness Semantics
+- `valid: false` blocks grouped-case execution.
+- warnings do not block execution but are surfaced for engineering review.

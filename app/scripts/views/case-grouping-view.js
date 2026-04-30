@@ -1,10 +1,12 @@
-export function renderTrainPositionView({ trainPositions, validation }) {
+export function renderTrainPositionView({ trainPositions, validation, readiness }) {
   if (!trainPositions) {
     return `<section class="card"><h2>Train Position / Case Grouping</h2><p class="muted">No train-position profile loaded.</p></section>`;
   }
 
   const statusClass = validation.valid ? "status-ok" : "status-bad";
   const statusLabel = validation.valid ? "Valid" : "Invalid";
+  const readinessClass = readiness.valid ? "status-ok" : "status-bad";
+  const readinessLabel = readiness.valid ? "Ready" : "Blocked";
 
   return `
     <section class="card panel-train-position">
@@ -22,6 +24,15 @@ export function renderTrainPositionView({ trainPositions, validation }) {
         <div><dt>Repeat Length</dt><dd>${trainPositions.repeatLength ?? "—"}</dd></div>
         <div><dt>Entry Count</dt><dd>${trainPositions.positions?.length ?? 0}</dd></div>
       </dl>
+    </section>
+
+    <section class="card">
+      <div class="panel-header-row">
+        <h3>Grouped-Case Readiness</h3>
+        <span class="status-pill ${readinessClass}">${readinessLabel}</span>
+      </div>
+      ${readiness.blockingIssues.length ? `<ul class="error-list">${readiness.blockingIssues.map((e) => `<li>${e}</li>`).join("")}</ul>` : "<p class='ok'>No blocking readiness issues detected.</p>"}
+      ${readiness.warnings.length ? `<p><strong>Warnings</strong></p><ul class="warning-list">${readiness.warnings.map((w) => `<li>${w}</li>`).join("")}</ul>` : ""}
     </section>
 
     <section class="card">

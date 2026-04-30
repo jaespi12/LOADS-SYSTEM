@@ -15,7 +15,12 @@ const state = {
     loadFamilies: { valid: false, errors: ["Load families have not been validated yet."] },
     geometry: { valid: false, errors: ["Geometry has not been validated yet."] },
     requiredLoadFamilies: { valid: false, errors: ["Required load-family check has not run yet."] },
-    trainPositions: { valid: false, errors: ["Train-position profile has not been validated yet."] }
+    trainPositions: { valid: false, errors: ["Train-position profile has not been validated yet."] },
+    groupedCaseReadiness: {
+      valid: false,
+      blockingIssues: ["Grouped-case readiness has not been evaluated yet."],
+      warnings: []
+    }
   }
 };
 

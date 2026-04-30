@@ -79,3 +79,44 @@ export function validateRequiredLoadFamilies(loadFamilies, requiredFamilyIds = [
     errors: missing.map((id) => `Missing required load family: ${id}`)
   };
 }
+
+export function validateGroupedCaseReadiness({ train, geometry, trainPositions }) {
+  const blockingIssues = [];
+  const warnings = [];
+
+  if (!train || !geometry || !trainPositions) {
+    if (!train) blockingIssues.push("Train data is required for grouped-case readiness.");
+    if (!geometry) blockingIssues.push("Geometry data is required for grouped-case readiness.");
+    if (!trainPositions) blockingIssues.push("Train-position profile is required for grouped-case readiness.");
+    return { valid: false, blockingIssues, warnings };
+  }
+
+  const totalTrainLength = (train.sections ?? []).reduce((sum, section) => sum + (section.length ?? 0), 0);
+  if (typeof trainPositions.repeatLength === "number" && totalTrainLength > 0 && trainPositions.repeatLength !== totalTrainLength) {
+    warnings.push(`repeatLength (${trainPositions.repeatLength}) differs from summed train section length (${totalTrainLength}).`);
+  }
+
+  const stations = (geometry.stations ?? []).map((s) => s.station);
+  if (!stations.length) {
+    blockingIssues.push("Geometry stations are required to validate train-position coverage.");
+  } else {
+    const minStation = Math.min(...stations);
+    const maxStation = Math.max(...stations);
+
+    (trainPositions.positions ?? []).forEach((position, index) => {
+      if (position.headStation < minStation || position.headStation > maxStation) {
+        blockingIssues.push(`positions[${index}].headStation (${position.headStation}) is outside geometry coverage [${minStation}, ${maxStation}].`);
+      }
+    });
+
+    if (typeof trainPositions.startStation === "number" && (trainPositions.startStation < minStation || trainPositions.startStation > maxStation)) {
+      blockingIssues.push(`startStation (${trainPositions.startStation}) is outside geometry coverage [${minStation}, ${maxStation}].`);
+    }
+
+    if (typeof trainPositions.endStation === "number" && (trainPositions.endStation < minStation || trainPositions.endStation > maxStation)) {
+      blockingIssues.push(`endStation (${trainPositions.endStation}) is outside geometry coverage [${minStation}, ${maxStation}].`);
+    }
+  }
+
+  return { valid: blockingIssues.length === 0, blockingIssues, warnings };
+}
