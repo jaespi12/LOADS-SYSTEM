@@ -123,6 +123,24 @@ Replaces the generic "Sections & Axles" form with a BEL/Stengel-aligned vehicle-
 | BEL/Stengel inertia formulas | Deferred (formula-free per AGENTS.md) |
 | Per-axle status badges | Deferred |
 
+## Milestone D — UI Consistency and Interaction Hardening (completed)
+
+### Objectives
+- Preserve `<details>` open/closed state across `setState()` re-renders (the root `innerHTML` replacement pattern resets all DOM open states).
+- Surface expand/collapse intent clearly via `▸` arrow indicator on `<summary>` elements.
+- Consistent theming: arrow indicator uses CSS transitions; hover state uses `--accent` color.
+
+### Deliverables
+- `app/scripts/app.js`: `captureDetailsState(root)` and `restoreDetailsState(root, map)` helpers wired into `render()` — called before and after `root.innerHTML = ...` to round-trip open/closed state through every repaint.
+- `app/scripts/views/train-view.js`: `data-panel-id="sec-{idx}-{geometry|axles|mass}"` on each `<details>` element so the helpers can match them across re-renders.
+- `app/styles/components.css`: `summary::before` arrow indicator with 90° CSS transition when `details[open]`; cross-browser marker reset (`::-webkit-details-marker`).
+- `app/tests/train-view-panels.test.js`: 4 assertions verifying deterministic panel IDs, correct default open/closed state, ID uniqueness across all sections, and zero IDs on empty trains.
+
+### Intentional deferred items
+- Horizontal scroll position of axle tables is still reset on every re-render (secondary issue; no fix this pass).
+- When a user clicks a `<summary>` immediately after a blur-triggered re-render, the click lands on a detached element and is lost — the user must click again. This edge case is rare and acceptable until a full virtual-DOM or diff-patch approach is considered.
+- No route-level scroll restoration (each tab renders fresh on activate).
+
 ## Workflow per AGENTS.md Implementation Order
 1. Update shared contract source (`shared/data`, `shared/schemas`).
 2. Update example fixtures (`app/data`).

@@ -35,6 +35,13 @@
 - Validation feedback must be visible in-context, near the affected domain section.
 - Loading and startup errors must render as first-class cards.
 
+## Collapsible Panel Rules
+- All collapsible sections use `<details>` + `<summary>` with a `data-panel-id` attribute on the `<details>` element.
+- Panel IDs must be deterministic and unique within a view (pattern: `{entity}-{index}-{panel-name}`).
+- The `render()` function captures all `details[data-panel-id]` open states before `root.innerHTML` replacement and restores them after, so user collapse/expand choices survive any `setState()` call.
+- The `<summary>` element renders a `▸` arrow indicator (CSS `::before`) that rotates 90° when `details[open]`.
+- `<summary>` elements must never contain interactive controls (inputs, buttons). Controls that affect the section go in the card header, not the summary.
+
 ## Accessibility and Readability
 - Preserve sufficient contrast for text, borders, status pills, and error states.
 - Ensure keyboard navigability for future interactive controls.

@@ -114,7 +114,7 @@ function renderSectionCard(section, idx, info) {
       </header>
 
       <div class="section-card-body">
-        <details open>
+        <details open data-panel-id="sec-${idx}-geometry">
           <summary>Section Geometry</summary>
           <div class="form-grid form-grid-section">
             <label class="field-label">ID</label>
@@ -130,7 +130,7 @@ function renderSectionCard(section, idx, info) {
           </div>
         </details>
 
-        <details open>
+        <details open data-panel-id="sec-${idx}-axles">
           <summary>Axle / Wheel-Pair Layout (${axles.length})</summary>
           <div class="table-scroll">
             <table class="data-table data-table-axles">
@@ -156,7 +156,7 @@ function renderSectionCard(section, idx, info) {
           </div>
         </details>
 
-        <details>
+        <details data-panel-id="sec-${idx}-mass">
           <summary>Mass &amp; Inertia Model (BEL/Stengel placeholders)</summary>
           <div class="form-grid form-grid-section">
             <label class="field-label">Mass</label>

@@ -731,6 +731,24 @@ function handleAction(action, target) {
   }
 }
 
+// ── Details open-state helpers (survive root.innerHTML replacement) ──────────
+
+function captureDetailsState(root) {
+  const map = {};
+  root.querySelectorAll("details[data-panel-id]").forEach((el) => {
+    map[el.dataset.panelId] = el.open;
+  });
+  return map;
+}
+
+function restoreDetailsState(root, map) {
+  if (!Object.keys(map).length) return;
+  root.querySelectorAll("details[data-panel-id]").forEach((el) => {
+    const id = el.dataset.panelId;
+    if (id in map) el.open = map[id];
+  });
+}
+
 // ── Event delegation ─────────────────────────────────────────────────────────
 
 function setupEventHandlers() {
@@ -982,7 +1000,9 @@ function render() {
     projectId: project?.projectId
   });
 
+  const panelState = captureDetailsState(root);
   root.innerHTML = `${sidebar}<div class="app-content">${renderActiveView(state)}</div>`;
+  restoreDetailsState(root, panelState);
 }
 
 onRouteChange((route) => {

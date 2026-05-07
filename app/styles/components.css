@@ -558,9 +558,36 @@
   color: var(--text);
   padding: 0.25rem 0;
   user-select: none;
+  list-style: none;
+  display: flex;
+  align-items: center;
+  gap: 0.4em;
+}
+
+.section-card-body summary::-webkit-details-marker {
+  display: none;
+}
+
+.section-card-body summary::before {
+  content: "▸";
+  font-size: 0.7em;
+  color: var(--muted);
+  display: inline-block;
+  transition: transform 0.12s ease;
+  flex-shrink: 0;
+  width: 1em;
+  text-align: center;
+}
+
+.section-card-body details[open] > summary::before {
+  transform: rotate(90deg);
 }
 
 .section-card-body summary:hover {
+  color: var(--accent);
+}
+
+.section-card-body summary:hover::before {
   color: var(--accent);
 }
 
