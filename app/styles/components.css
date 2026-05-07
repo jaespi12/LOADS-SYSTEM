@@ -411,35 +411,222 @@
   border-radius: 4px;
 }
 
-/* ── Train section block ─────────────────────────────────────────────────── */
-.section-block {
-  border: 1px solid #1f2937;
-  border-radius: 6px;
+/* ── Train tab — vehicle-model layout ─────────────────────────────────────── */
+
+/* KPI strip across the top */
+.kpi-strip {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 0.5rem;
   margin-bottom: 0.85rem;
+}
+
+.kpi-card {
+  background: var(--panel);
+  border: 1px solid #1f2937;
+  border-left: 3px solid #a78bfa;
+  border-radius: 6px;
+  padding: 0.5rem 0.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  min-width: 0;
+}
+
+.kpi-label {
+  color: var(--muted);
+  font-size: 0.65rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.kpi-value {
+  font-size: 1.05rem;
+  font-weight: 700;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.mono {
+  font-family: ui-monospace, "SFMono-Regular", Menlo, monospace;
+}
+
+.small {
+  font-size: 0.78rem;
+}
+
+.subhead {
+  margin: 0.85rem 0 0.35rem;
+  font-size: 0.78rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+/* Two-column workspace */
+.train-workspace {
+  display: grid;
+  grid-template-columns: minmax(0, 2.1fr) minmax(280px, 1fr);
+  gap: 0.85rem;
+  margin-bottom: 0.85rem;
+}
+
+.train-workspace-left,
+.train-workspace-right {
+  display: grid;
+  gap: 0.85rem;
+  align-content: start;
+  min-width: 0;
+}
+
+@media (max-width: 1100px) {
+  .train-workspace {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Train metadata block — compact 2-column */
+.form-grid-train {
+  grid-template-columns: max-content minmax(0, 1fr);
+  max-width: none;
+}
+
+/* Section card */
+.section-card {
+  background: rgba(15, 23, 42, 0.55);
+  border: 1px solid #1f2937;
+  border-radius: 8px;
+  margin-bottom: 0.7rem;
   overflow: hidden;
 }
 
-.section-block-header {
+.section-card-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
   gap: 0.75rem;
   background: #1a2332;
   padding: 0.5rem 0.75rem;
+  border-bottom: 1px solid #1f2937;
 }
 
-.section-meta {
+.section-card-title {
   display: flex;
-  align-items: center;
-  gap: 0.85rem;
+  align-items: baseline;
+  gap: 0.65rem;
   flex-wrap: wrap;
 }
 
 .section-id {
-  font-family: ui-monospace, "SFMono-Regular", Menlo, monospace;
-  font-size: 0.85rem;
+  font-size: 0.92rem;
   color: var(--accent);
   font-weight: 700;
+}
+
+.section-card-pos {
+  font-size: 0.78rem;
+}
+
+.section-card-controls {
+  display: flex;
+  gap: 0.4rem;
+  flex-shrink: 0;
+}
+
+.section-card-body {
+  padding: 0.55rem 0.75rem;
+}
+
+.section-card-body details {
+  border-top: 1px solid #1f2937;
+  padding-top: 0.45rem;
+  margin-top: 0.45rem;
+}
+
+.section-card-body details:first-child {
+  border-top: none;
+  padding-top: 0;
+  margin-top: 0;
+}
+
+.section-card-body summary {
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 0.85rem;
+  color: var(--text);
+  padding: 0.25rem 0;
+  user-select: none;
+}
+
+.section-card-body summary:hover {
+  color: var(--accent);
+}
+
+/* Section form grid — denser two-column */
+.form-grid-section {
+  grid-template-columns: max-content minmax(80px, 1fr);
+  gap: 0.4rem 0.75rem;
+  max-width: none;
+  margin-top: 0.35rem;
+}
+
+/* Tight axle table inside a card */
+.data-table-axles th,
+.data-table-axles td {
+  padding: 0.2rem 0.4rem;
+}
+
+.data-table-axles .field-input {
+  padding: 0.2rem 0.4rem;
+  font-size: 0.82rem;
+}
+
+.data-table-axles .field-num,
+.data-table-axles .field-text {
+  max-width: none;
+  width: 100%;
+  min-width: 70px;
+}
+
+/* Tight reference tables (right column + global axle table) */
+.data-table-tight th,
+.data-table-tight td {
+  padding: 0.2rem 0.5rem;
+  font-size: 0.82rem;
+}
+
+/* Tight kv-grid for right-column summary */
+.kv-grid-tight {
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 0.3rem 0.65rem;
+}
+
+.kv-grid-tight dt {
+  font-size: 0.7rem;
+}
+
+.kv-grid-tight dd {
+  font-size: 0.92rem;
+}
+
+.field-checkbox {
+  width: 1rem;
+  height: 1rem;
+  cursor: pointer;
+  accent-color: var(--accent);
+}
+
+.field-checkbox-wrap {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.field-select {
+  width: 100%;
+  max-width: 180px;
 }
 
 /* ── Load-family toggle list ─────────────────────────────────────────────── */

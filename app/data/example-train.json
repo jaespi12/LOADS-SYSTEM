@@ -1,27 +1,43 @@
 {
   "trainId": "TRN-001",
   "trainName": "Passenger Baseline Set",
+  "vehicleType": "PASSENGER_RAIL",
+  "notes": "Two-car baseline for load development. Mass / inertia values pending engineering review.",
   "sections": [
     {
       "id": "SEC-LEAD",
       "name": "Lead Car",
+      "type": "LEAD",
       "length": 82,
+      "gapToNext": 0,
+      "mass": null,
+      "centerOfMass": { "x": 41, "y": 0, "z": null },
+      "inertia": { "Ixx": null, "Iyy": null, "Izz": null },
+      "participatesInLoadGen": true,
+      "dataSource": "PENDING",
       "axles": [
-        { "offset": 8, "load": 17.5 },
-        { "offset": 22, "load": 17.5 },
-        { "offset": 60, "load": 18.1 },
-        { "offset": 74, "load": 18.1 }
+        { "axleId": "A-LEAD-1", "wheelPairId": "WP-LEAD-1", "offset": 8,  "load": 17.5, "gauge": 4.708 },
+        { "axleId": "A-LEAD-2", "wheelPairId": "WP-LEAD-1", "offset": 22, "load": 17.5, "gauge": 4.708 },
+        { "axleId": "A-LEAD-3", "wheelPairId": "WP-LEAD-2", "offset": 60, "load": 18.1, "gauge": 4.708 },
+        { "axleId": "A-LEAD-4", "wheelPairId": "WP-LEAD-2", "offset": 74, "load": 18.1, "gauge": 4.708 }
       ]
     },
     {
       "id": "SEC-TRAIL",
       "name": "Trailing Car",
+      "type": "TRAILER",
       "length": 82,
+      "gapToNext": 0,
+      "mass": null,
+      "centerOfMass": { "x": 41, "y": 0, "z": null },
+      "inertia": { "Ixx": null, "Iyy": null, "Izz": null },
+      "participatesInLoadGen": true,
+      "dataSource": "PENDING",
       "axles": [
-        { "offset": 8, "load": 16.9 },
-        { "offset": 22, "load": 16.9 },
-        { "offset": 60, "load": 17.2 },
-        { "offset": 74, "load": 17.2 }
+        { "axleId": "A-TRAIL-1", "wheelPairId": "WP-TRAIL-1", "offset": 8,  "load": 16.9, "gauge": 4.708 },
+        { "axleId": "A-TRAIL-2", "wheelPairId": "WP-TRAIL-1", "offset": 22, "load": 16.9, "gauge": 4.708 },
+        { "axleId": "A-TRAIL-3", "wheelPairId": "WP-TRAIL-2", "offset": 60, "load": 17.2, "gauge": 4.708 },
+        { "axleId": "A-TRAIL-4", "wheelPairId": "WP-TRAIL-2", "offset": 74, "load": 17.2, "gauge": 4.708 }
       ]
     }
   ]

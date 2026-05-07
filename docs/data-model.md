@@ -11,6 +11,38 @@ The package summary continues to aggregate:
 4. Kinematics
 5. Load Families
 
+## Train Vehicle Model (BEL/Stengel-aligned)
+The Train profile (`train-section.schema.json`) carries a sequence of sections (cars / bogie frames) that defines the vehicle model consumed by the wheel-load engine. Optional fields support BEL/Stengel-style mass and inertia inputs without yet computing them.
+
+Train-level fields:
+- `trainId` (required), `trainName` (required)
+- `vehicleType` (optional)
+- `notes` (optional)
+
+Section fields:
+- `id`, `name`, `length`, `axles` (required)
+- `type` ∈ {`LEAD`, `MIDDLE`, `TRAILER`, `BOGIE_FRAME`} (optional)
+- `gapToNext` (optional inter-section spacing, used by UI for global-position math; **not** used by engines yet)
+- `mass`, `centerOfMass {x,y,z}`, `inertia {Ixx,Iyy,Izz}` (optional, all nullable — placeholders until BEL/Stengel inputs are approved)
+- `participatesInLoadGen` (boolean, default treated as true)
+- `dataSource` ∈ {`MANUAL`, `IMPORTED`, `PENDING`}
+
+Axle fields:
+- `offset`, `load` (required)
+- `axleId`, `wheelPairId`, `gauge`, `leftWheelId`, `rightWheelId` (optional)
+
+### Two views of train geometry
+- **Engine view** (current): axle station = `headStation + cumulativeSectionStart_byLengthOnly + offset`. Inter-section gaps are **not** included. This is enforced by `wheel-load-engine.js` line ~62. The grouped-case `repeatLengthReference.trainSectionLengthSum` matches this sum.
+- **UI view** (`app/scripts/utils/train-model.js`): adds `gapToNext` between sections to compute total train length, cumulative section starts, and global axle positions. This is informational and used by the Train tab; it does not feed engine math.
+
+The two views agree exactly when every section has `gapToNext === 0` or omits the field. Reconciling them — i.e. allowing engines to consume gaps — requires a new approved formula entry in `docs/load-methodology.md` and is intentionally deferred.
+
+### Engineering warnings surfaced on the Train tab
+- Section: missing length, negative length, negative gap
+- Axle: offset outside section length, duplicate `axleId`
+- Mass/inertia: missing values surface as `info` (not blocking) until BEL/Stengel approval
+- Center-of-mass z-offset: missing surfaces as `info`
+
 ## Train-Position Generation Input Contract
 Train-position profile is generated from fixed arc-length stepping assumptions and validated via schema.
 

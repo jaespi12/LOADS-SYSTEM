@@ -39,6 +39,26 @@ async function loadJson(path) {
   return response.json();
 }
 
+// ── Field helpers (deep paths + type-aware input reading) ────────────────────
+
+function setDeep(obj, path, value) {
+  const parts = String(path).split(".");
+  if (parts.length === 1) return { ...obj, [parts[0]]: value };
+  const [head, ...rest] = parts;
+  const child = obj?.[head] && typeof obj[head] === "object" && !Array.isArray(obj[head]) ? obj[head] : {};
+  return { ...obj, [head]: setDeep(child, rest.join("."), value) };
+}
+
+function readInputValue(target) {
+  if (target.type === "checkbox") return Boolean(target.checked);
+  if (target.type === "number") {
+    const raw = target.value.trim();
+    return raw === "" ? null : Number(raw);
+  }
+  // text, textarea, select
+  return target.value;
+}
+
 // ── Fixture snapshots (kept for Reset action) ────────────────────────────────
 
 const fixtureSnapshots = {};
@@ -51,8 +71,11 @@ const MUTATION_ACTIONS = new Set([
   "mutate-geometry-station",
   "add-geometry-station",
   "remove-geometry-station",
+  "mutate-train",
   "mutate-train-section",
   "mutate-axle",
+  "add-train-section",
+  "remove-train-section",
   "add-axle",
   "remove-axle",
   "mutate-kinematics-entry",
@@ -193,12 +216,24 @@ function handleAction(action, target) {
       break;
     }
 
+    case "mutate-train": {
+      const field = target.dataset.field;
+      const value = readInputValue(target);
+      const newTrain = setDeep(state.train ?? {}, field, value);
+      const gc = recomputeGroupedCases({ ...state, train: newTrain });
+      setState({
+        train: newTrain,
+        groupingResult: gc.groupingResult, groupedCases: gc.groupedCases, groupedCaseValidation: gc.groupedCaseValidation,
+        validation: { ...validation, train: validateAgainstSchema(schemas.train, newTrain), groupedCaseReadiness: gc.groupedCaseReadiness }
+      });
+      break;
+    }
+
     case "mutate-train-section": {
       const sIdx = Number(target.dataset.sectionIdx);
       const field = target.dataset.field;
-      const raw = target.value.trim();
-      const value = field === "length" ? (raw === "" ? null : Number(raw)) : raw;
-      const newSections = (state.train.sections ?? []).map((s, i) => i === sIdx ? { ...s, [field]: value } : s);
+      const value = readInputValue(target);
+      const newSections = (state.train.sections ?? []).map((s, i) => i === sIdx ? setDeep(s, field, value) : s);
       const newTrain = { ...state.train, sections: newSections };
       const gc = recomputeGroupedCases({ ...state, train: newTrain });
       setState({
@@ -213,13 +248,51 @@ function handleAction(action, target) {
       const sIdx = Number(target.dataset.sectionIdx);
       const aIdx = Number(target.dataset.axleIdx);
       const field = target.dataset.field;
-      const raw = target.value.trim();
-      const value = raw === "" ? null : Number(raw);
+      const value = readInputValue(target);
       const newSections = (state.train.sections ?? []).map((s, si) => {
         if (si !== sIdx) return s;
-        const newAxles = (s.axles ?? []).map((a, ai) => ai === aIdx ? { ...a, [field]: value } : a);
+        const newAxles = (s.axles ?? []).map((a, ai) => ai === aIdx ? setDeep(a, field, value) : a);
         return { ...s, axles: newAxles };
       });
+      const newTrain = { ...state.train, sections: newSections };
+      const gc = recomputeGroupedCases({ ...state, train: newTrain });
+      setState({
+        train: newTrain,
+        groupingResult: gc.groupingResult, groupedCases: gc.groupedCases, groupedCaseValidation: gc.groupedCaseValidation,
+        validation: { ...validation, train: validateAgainstSchema(schemas.train, newTrain), groupedCaseReadiness: gc.groupedCaseReadiness }
+      });
+      break;
+    }
+
+    case "add-train-section": {
+      const sections = state.train?.sections ?? [];
+      const newId = `SEC-${sections.length + 1}`;
+      const newSection = {
+        id: newId,
+        name: `Section ${sections.length + 1}`,
+        type: sections.length === 0 ? "LEAD" : "MIDDLE",
+        length: 20,
+        gapToNext: 0,
+        mass: null,
+        centerOfMass: { x: null, y: null, z: null },
+        inertia: { Ixx: null, Iyy: null, Izz: null },
+        participatesInLoadGen: true,
+        dataSource: "MANUAL",
+        axles: [{ axleId: `A-${newId}-1`, wheelPairId: `WP-${newId}-1`, offset: 5, load: 0 }]
+      };
+      const newTrain = { ...state.train, sections: [...sections, newSection] };
+      const gc = recomputeGroupedCases({ ...state, train: newTrain });
+      setState({
+        train: newTrain,
+        groupingResult: gc.groupingResult, groupedCases: gc.groupedCases, groupedCaseValidation: gc.groupedCaseValidation,
+        validation: { ...validation, train: validateAgainstSchema(schemas.train, newTrain), groupedCaseReadiness: gc.groupedCaseReadiness }
+      });
+      break;
+    }
+
+    case "remove-train-section": {
+      const sIdx = Number(target.dataset.sectionIdx);
+      const newSections = (state.train?.sections ?? []).filter((_, i) => i !== sIdx);
       const newTrain = { ...state.train, sections: newSections };
       const gc = recomputeGroupedCases({ ...state, train: newTrain });
       setState({
@@ -234,7 +307,9 @@ function handleAction(action, target) {
       const sIdx = Number(target.dataset.sectionIdx);
       const newSections = (state.train.sections ?? []).map((s, si) => {
         if (si !== sIdx) return s;
-        return { ...s, axles: [...(s.axles ?? []), { offset: 0, load: 0 }] };
+        const nextN = (s.axles?.length ?? 0) + 1;
+        const newAxle = { axleId: `A-${s.id ?? `SEC-${sIdx}`}-${nextN}`, wheelPairId: null, offset: 0, load: 0 };
+        return { ...s, axles: [...(s.axles ?? []), newAxle] };
       });
       const newTrain = { ...state.train, sections: newSections };
       const gc = recomputeGroupedCases({ ...state, train: newTrain });

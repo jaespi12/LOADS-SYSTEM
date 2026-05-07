@@ -101,6 +101,28 @@ Stores multiple named projects. Storage layout and package format documented in 
 | Server-side persistence | Out of scope (no backend per AGENTS.md) |
 | Snapshot of computed outputs (wheel-load / envelope) | Deferred (gated on math approval) |
 
+### Train Tab — Vehicle-Model Editor (in place)
+Replaces the generic "Sections & Axles" form with a BEL/Stengel-aligned vehicle-model editor. Schema and fixture updated to carry optional vehicle-model fields; engine math unchanged this pass.
+
+| Capability | Status |
+| --- | --- |
+| KPI strip (Train ID, Vehicle Type, Sections, Axles, Wheel Pairs, Train Length, First→Last Wheel, Schema status) | Done |
+| Two-column workspace (formation editor / derived + warnings) | Done |
+| Editable train-level metadata (`trainId`, `trainName`, `vehicleType`, `notes`) | Done |
+| Editable section metadata (`id`, `name`, `type`, `length`, `gapToNext`) | Done |
+| Editable mass/inertia placeholders (`mass`, `centerOfMass.{x,y,z}`, `inertia.{Ixx,Iyy,Izz}`, `participatesInLoadGen`, `dataSource`) | Done |
+| Editable axle metadata (`axleId`, `offset`, `load`, `wheelPairId`, `gauge`, `leftWheelId`, `rightWheelId`) | Done |
+| Add / Remove section buttons | Done |
+| Add / Remove axle buttons (per section) | Done |
+| Derived geometry panel (cumulative starts, total length, first→last wheel distance) | Done |
+| Mass & Inertia summary panel | Done |
+| Inline engineering warnings (blocking + info severities) | Done |
+| Global axle position table (bottom, full width) | Done |
+| Wheel-load engine consumes inter-section gaps | Deferred (gated on formula approval) |
+| Drag-to-reorder sections | Deferred |
+| BEL/Stengel inertia formulas | Deferred (formula-free per AGENTS.md) |
+| Per-axle status badges | Deferred |
+
 ## Workflow per AGENTS.md Implementation Order
 1. Update shared contract source (`shared/data`, `shared/schemas`).
 2. Update example fixtures (`app/data`).
