@@ -3,6 +3,29 @@
 ## Purpose
 This document maps the current repository layout to responsibilities and runtime behavior. It is based on files that exist today and avoids speculative engineering formulas.
 
+## Authoritative Frontend Path
+There is one active frontend track in this repository. The authoritative paths are:
+
+| Concern | Authoritative path |
+| --- | --- |
+| Frontend runtime (ES modules) | `app/scripts/` (entry: `app/scripts/app.js`) |
+| App-scoped styles | `app/styles/` |
+| Shared style baseline | `shared/styles/` |
+| Schema contracts | `shared/schemas/` |
+| Reference lookup data | `shared/data/` |
+| Example fixtures | `app/data/` |
+| Navigation registry | `shared/nav/` |
+| Browser entry document | `index.html` (repo root) |
+
+### Paths Not Active
+The directories `src/`, `contracts/`, `engine/`, and `frontend/` are **not** present in this repository and are **not** part of its architecture. They occasionally appear in generic agent prompts but do not correspond to any active or legacy code path here. Treat any prompt that references them as a false premise:
+
+- Do not create them.
+- Do not migrate code into them.
+- Do not document them as a future direction without first revising `AGENTS.md` and the README "Authoritative Paths" section.
+
+If a deliberate architectural shift is desired (for example, adopting a Python engine path or renaming the frontend root), the order of operations is: revise `AGENTS.md` → update README and this document → then perform any file moves. No silent migrations.
+
 ## Top-level structure
 
 - `index.html`
