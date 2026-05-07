@@ -38,10 +38,14 @@ Axle fields:
 The two views agree exactly when every section has `gapToNext === 0` or omits the field. Reconciling them — i.e. allowing engines to consume gaps — requires a new approved formula entry in `docs/load-methodology.md` and is intentionally deferred.
 
 ### Engineering warnings surfaced on the Train tab
-- Section: missing length, negative length, negative gap
-- Axle: offset outside section length, duplicate `axleId`
-- Mass/inertia: missing values surface as `info` (not blocking) until BEL/Stengel approval
-- Center-of-mass z-offset: missing surfaces as `info`
+The visible Train tab uses plain-language messages only — no JSON paths, no vendor names, no internal field names. The `train-model.js` analyzer emits messages such as:
+- Section: "{section name} is missing a length.", "{section name} has a negative length (n).", "{section name} has a negative gap to the next section (n)."
+- Axle: "Axle \"{id}\" is positioned outside section length (offset n, section length m).", "Two axles share the same ID: \"{id}\"."
+- Mass / Inertia / Center of Mass: "{section name}: mass is not yet entered.", "{section name}: inertia values are not yet entered.", "{section name}: center of mass height is not yet entered." All three surface as `info`, not `blocking`.
+
+Section labels fall back from `name` → `id` → `"Section N"` (1-based) so messages always read naturally.
+
+Schema-validator output (which can leak field paths such as `sections[0].centerOfMass.z`) is passed through the view-layer `humanizeSchemaError` helper before display in the Checks panel.
 
 ## Train-Position Generation Input Contract
 Train-position profile is generated from fixed arc-length stepping assumptions and validated via schema.

@@ -83,24 +83,28 @@ import { analyzeTrainModel } from "../scripts/utils/train-model.js";
   assert.ok(blocking.some((w) => w.message.includes("outside section length")));
 }
 
-// Blocking warning: duplicate axle ID
+// Blocking warning: duplicate axle ID — plain language, no developer jargon
 {
   const train = { sections: [{ id: "A", length: 10, axles: [
     { axleId: "dup", offset: 1, load: 0 }, { axleId: "dup", offset: 2, load: 0 }
   ]}]};
   const m = analyzeTrainModel(train);
   const blocking = m.warnings.filter((w) => w.severity === "blocking");
-  assert.ok(blocking.some((w) => w.message.includes("Duplicate axleId")));
+  assert.ok(blocking.some((w) => w.message.includes("Two axles share the same ID")));
+  assert.ok(!blocking.some((w) => w.message.includes("axleId")));
 }
 
-// Info warnings: missing mass/inertia/com.z
+// Info warnings: plain-language messages, no vendor names, no developer jargon
 {
   const train = { sections: [{ id: "A", length: 10, axles: [{ offset: 1, load: 0 }] }] };
   const m = analyzeTrainModel(train);
   const info = m.warnings.filter((w) => w.severity === "info");
-  assert.ok(info.some((w) => w.message.includes("mass not set")));
-  assert.ok(info.some((w) => w.message.includes("inertia not set")));
-  assert.ok(info.some((w) => w.message.includes("center-of-mass")));
+  assert.ok(info.some((w) => w.message.includes("mass is not yet entered")));
+  assert.ok(info.some((w) => w.message.includes("inertia values are not yet entered")));
+  assert.ok(info.some((w) => w.message.includes("center of mass height is not yet entered")));
+  for (const w of m.warnings) {
+    assert.ok(!/BEL|Stengel|placeholder|\bCoM\b|sections\[/.test(w.message), `banned term in: ${w.message}`);
+  }
 }
 
 // Negative length is blocking
@@ -108,6 +112,18 @@ import { analyzeTrainModel } from "../scripts/utils/train-model.js";
   const train = { sections: [{ id: "A", length: -5, axles: [{ offset: 0, load: 0 }] }] };
   const m = analyzeTrainModel(train);
   assert.ok(m.warnings.some((w) => w.severity === "blocking" && w.message.includes("negative length")));
+}
+
+// Section label falls back: name → id → "Section N"
+{
+  const train = { sections: [
+    { name: "Lead Car", length: 10, axles: [] },
+    { id: "B", length: -1, axles: [] },
+    { length: -1, axles: [] }
+  ]};
+  const m = analyzeTrainModel(train);
+  assert.ok(m.warnings.some((w) => w.message.startsWith("B has a negative length")));
+  assert.ok(m.warnings.some((w) => w.message.startsWith("Section 3 has a negative length")));
 }
 
 console.log("train-model.test.js passed");

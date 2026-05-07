@@ -11,6 +11,10 @@
  * gapToNext is zero or absent for every section.
  */
 
+function sectionLabel(section, idx) {
+  return section?.name || section?.id || `Section ${idx + 1}`;
+}
+
 export function analyzeTrainModel(train) {
   const sections = train?.sections ?? [];
   const warnings = [];
@@ -23,10 +27,12 @@ export function analyzeTrainModel(train) {
     const gap = typeof section.gapToNext === "number" ? section.gapToNext : 0;
     const start = cursor;
     const end = start + length;
+    const label = sectionLabel(section, idx);
     sectionInfo.push({
       index: idx,
       id: section.id ?? `SEC-${idx}`,
       name: section.name ?? "",
+      label,
       type: section.type ?? null,
       length,
       gapToNext: gap,
@@ -42,21 +48,21 @@ export function analyzeTrainModel(train) {
     cursor = end + gap;
 
     if (typeof section.length !== "number") {
-      warnings.push({ severity: "blocking", scope: `sections[${idx}]`, message: `${section.id ?? `section ${idx}`} is missing length.` });
+      warnings.push({ severity: "blocking", scope: `section:${idx}`, message: `${label} is missing a length.` });
     } else if (length < 0) {
-      warnings.push({ severity: "blocking", scope: `sections[${idx}]`, message: `${section.id ?? `section ${idx}`} has negative length (${length}).` });
+      warnings.push({ severity: "blocking", scope: `section:${idx}`, message: `${label} has a negative length (${length}).` });
     }
     if (gap < 0) {
-      warnings.push({ severity: "blocking", scope: `sections[${idx}]`, message: `${section.id ?? `section ${idx}`} has negative gapToNext (${gap}).` });
+      warnings.push({ severity: "blocking", scope: `section:${idx}`, message: `${label} has a negative gap to the next section (${gap}).` });
     }
     if (section.mass == null) {
-      warnings.push({ severity: "info", scope: `sections[${idx}].mass`, message: `${section.id ?? `section ${idx}`}: mass not set (placeholder until BEL/Stengel input).` });
+      warnings.push({ severity: "info", scope: `section:${idx}:mass`, message: `${label}: mass is not yet entered.` });
     }
     if (!section.inertia || (section.inertia.Ixx == null && section.inertia.Iyy == null && section.inertia.Izz == null)) {
-      warnings.push({ severity: "info", scope: `sections[${idx}].inertia`, message: `${section.id ?? `section ${idx}`}: inertia not set (placeholder until BEL/Stengel input).` });
+      warnings.push({ severity: "info", scope: `section:${idx}:inertia`, message: `${label}: inertia values are not yet entered.` });
     }
     if (!section.centerOfMass || section.centerOfMass.z == null) {
-      warnings.push({ severity: "info", scope: `sections[${idx}].centerOfMass`, message: `${section.id ?? `section ${idx}`}: center-of-mass z-offset not set.` });
+      warnings.push({ severity: "info", scope: `section:${idx}:com`, message: `${label}: center of mass height is not yet entered.` });
     }
   });
 
@@ -72,6 +78,7 @@ export function analyzeTrainModel(train) {
   sections.forEach((section, sIdx) => {
     const sStart = sectionInfo[sIdx].sectionStart;
     const sLength = sectionInfo[sIdx].length;
+    const sLabel = sectionInfo[sIdx].label;
     (section.axles ?? []).forEach((axle, aIdx) => {
       const offset = typeof axle.offset === "number" ? axle.offset : 0;
       const globalPosition = sStart + offset;
@@ -87,16 +94,21 @@ export function analyzeTrainModel(train) {
         leftWheelId: axle.leftWheelId ?? null,
         rightWheelId: axle.rightWheelId ?? null,
         sectionId: section.id ?? `SEC-${sIdx}`,
+        sectionLabel: sLabel,
         globalPosition
       });
       if (axle.axleId) {
         if (seenAxleIds.has(axle.axleId)) {
-          warnings.push({ severity: "blocking", scope: `sections[${sIdx}].axles[${aIdx}]`, message: `Duplicate axleId "${axle.axleId}".` });
+          warnings.push({ severity: "blocking", scope: `axle:${sIdx}:${aIdx}`, message: `Two axles share the same ID: "${axle.axleId}".` });
         }
         seenAxleIds.add(axle.axleId);
       }
       if (typeof axle.offset === "number" && (axle.offset < 0 || (sLength > 0 && axle.offset > sLength))) {
-        warnings.push({ severity: "blocking", scope: `sections[${sIdx}].axles[${aIdx}]`, message: `Axle ${id}: offset ${offset} is outside section length [0, ${sLength}].` });
+        warnings.push({
+          severity: "blocking",
+          scope: `axle:${sIdx}:${aIdx}`,
+          message: `Axle "${id}" is positioned outside section length (offset ${offset}, section length ${sLength}).`
+        });
       }
     });
   });

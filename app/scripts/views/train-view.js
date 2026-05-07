@@ -1,6 +1,8 @@
 import { esc, fmtNum } from "../utils/format.js";
 import { analyzeTrainModel } from "../utils/train-model.js";
 
+// ── Product-facing option labels (no internal codes shown to users) ──────────
+
 const SECTION_TYPE_OPTIONS = [
   { value: "", label: "—" },
   { value: "LEAD", label: "Lead" },
@@ -9,10 +11,10 @@ const SECTION_TYPE_OPTIONS = [
   { value: "BOGIE_FRAME", label: "Bogie Frame" }
 ];
 
-const DATA_SOURCE_OPTIONS = [
-  { value: "MANUAL", label: "Manual" },
+const SOURCE_OPTIONS = [
+  { value: "MANUAL", label: "Manually entered" },
   { value: "IMPORTED", label: "Imported" },
-  { value: "PENDING", label: "Pending" }
+  { value: "PENDING", label: "Not yet entered" }
 ];
 
 // ── Input helpers ────────────────────────────────────────────────────────────
@@ -41,41 +43,72 @@ function checkboxInput(attrs, checked) {
   return `<input type="checkbox" class="field-checkbox" ${dataAttrs(attrs)}${checked ? " checked" : ""}>`;
 }
 
-// ── KPI strip (top row) ──────────────────────────────────────────────────────
+// ── Summary strip (top, full width) ──────────────────────────────────────────
 
-function renderKpiStrip(train, m, validationValid) {
-  const validationLabel = validationValid ? "Valid" : "Invalid";
-  const validationClass = validationValid ? "status-ok" : "status-bad";
+function renderSummaryStrip(train, m, checksOk) {
+  const checkLabel = checksOk ? "All checks passed" : "Needs attention";
+  const checkClass = checksOk ? "status-ok" : "status-bad";
+  const calcBadge = `<span class="kpi-badge kpi-badge-calc" title="Calculated from your inputs">calculated</span>`;
+  const inputBadge = `<span class="kpi-badge kpi-badge-input" title="Set in Train Details / Train Formation">input</span>`;
+  const countBadge = `<span class="kpi-badge kpi-badge-count" title="Use Add/Remove Section to change">count</span>`;
+
   return `
-    <section class="kpi-strip">
-      <div class="kpi-card"><span class="kpi-label">Train ID</span><span class="kpi-value mono">${esc(train.trainId ?? "—")}</span></div>
-      <div class="kpi-card"><span class="kpi-label">Vehicle Type</span><span class="kpi-value">${esc(train.vehicleType ?? "—")}</span></div>
-      <div class="kpi-card"><span class="kpi-label">Sections</span><span class="kpi-value">${m.sectionCount}</span></div>
-      <div class="kpi-card"><span class="kpi-label">Total Axles</span><span class="kpi-value">${m.axleCount}</span></div>
-      <div class="kpi-card"><span class="kpi-label">Wheel Pairs</span><span class="kpi-value">${m.wheelPairCount}</span></div>
-      <div class="kpi-card"><span class="kpi-label">Train Length</span><span class="kpi-value">${fmtNum(m.totalTrainLength)}</span></div>
-      <div class="kpi-card"><span class="kpi-label">First → Last Wheel</span><span class="kpi-value">${fmtNum(m.firstToLastWheelDistance)}</span></div>
-      <div class="kpi-card"><span class="kpi-label">Schema</span><span class="status-pill ${validationClass}">${validationLabel}</span></div>
+    <section class="summary-strip">
+      <div class="summary-card summary-card-input">
+        <div class="summary-label">Train ID ${inputBadge}</div>
+        <div class="summary-value mono">${esc(train.trainId ?? "—")}</div>
+      </div>
+      <div class="summary-card summary-card-input">
+        <div class="summary-label">Vehicle Type ${inputBadge}</div>
+        <div class="summary-value">${esc(train.vehicleType ?? "—")}</div>
+      </div>
+      <div class="summary-card summary-card-count">
+        <div class="summary-label">Number of Sections ${countBadge}</div>
+        <div class="summary-value">${m.sectionCount}</div>
+      </div>
+      <div class="summary-card summary-card-calc">
+        <div class="summary-label">Total Axles ${calcBadge}</div>
+        <div class="summary-value">${m.axleCount}</div>
+      </div>
+      <div class="summary-card summary-card-calc">
+        <div class="summary-label">Total Wheel Pairs ${calcBadge}</div>
+        <div class="summary-value">${m.wheelPairCount}</div>
+      </div>
+      <div class="summary-card summary-card-calc">
+        <div class="summary-label">Total Train Length ${calcBadge}</div>
+        <div class="summary-value">${fmtNum(m.totalTrainLength)}</div>
+      </div>
+      <div class="summary-card summary-card-calc">
+        <div class="summary-label">First → Last Wheel ${calcBadge}</div>
+        <div class="summary-value">${fmtNum(m.firstToLastWheelDistance)}</div>
+      </div>
+      <div class="summary-card summary-card-status">
+        <div class="summary-label">Checks</div>
+        <div class="summary-value"><span class="status-pill ${checkClass}">${checkLabel}</span></div>
+      </div>
     </section>`;
 }
 
-// ── Train metadata block ─────────────────────────────────────────────────────
+// ── Train details (left column) ──────────────────────────────────────────────
 
-function renderTrainMetaBlock(train) {
+function renderTrainDetails(train) {
   return `
     <section class="card panel-train">
-      <h3>Train Metadata</h3>
+      <header class="card-header">
+        <h3>Train Details</h3>
+        <span class="card-header-hint">Identification and notes for this train.</span>
+      </header>
       <div class="form-grid form-grid-train">
-        <label class="field-label" for="train-id">Train ID</label>
+        <label class="field-label">Train ID</label>
         ${textInput({ action: "mutate-train", field: "trainId" }, train.trainId)}
 
-        <label class="field-label" for="train-name">Train Name</label>
+        <label class="field-label">Train Name</label>
         ${textInput({ action: "mutate-train", field: "trainName" }, train.trainName)}
 
-        <label class="field-label" for="train-vt">Vehicle Type</label>
+        <label class="field-label">Vehicle Type</label>
         ${textInput({ action: "mutate-train", field: "vehicleType" }, train.vehicleType ?? "")}
 
-        <label class="field-label" for="train-notes">Notes</label>
+        <label class="field-label">Notes</label>
         <textarea class="field-input field-textarea" rows="2" ${dataAttrs({ action: "mutate-train", field: "notes" })}>${esc(train.notes ?? "")}</textarea>
       </div>
     </section>`;
@@ -86,7 +119,7 @@ function renderTrainMetaBlock(train) {
 function renderAxleRow(axle, sectionIdx, axleIdx) {
   return `
     <tr>
-      <td class="tc muted mono small">${axleIdx}</td>
+      <td class="tc muted mono small">${axleIdx + 1}</td>
       <td>${textInput({ action: "mutate-axle", "section-idx": sectionIdx, "axle-idx": axleIdx, field: "axleId" }, axle.axleId ?? "")}</td>
       <td>${numInput({ action: "mutate-axle", "section-idx": sectionIdx, "axle-idx": axleIdx, field: "offset" }, axle.offset, "0.001")}</td>
       <td>${numInput({ action: "mutate-axle", "section-idx": sectionIdx, "axle-idx": axleIdx, field: "load" }, axle.load, "0.001")}</td>
@@ -100,56 +133,58 @@ function renderAxleRow(axle, sectionIdx, axleIdx) {
 
 function renderSectionCard(section, idx, info) {
   const axles = section.axles ?? [];
+  const label = info.label || section.name || section.id || `Section ${idx + 1}`;
   return `
     <article class="section-card">
       <header class="section-card-header">
         <div class="section-card-title">
-          <span class="section-id mono">${esc(section.id ?? `SEC-${idx}`)}</span>
-          <span class="section-card-pos muted small">@ start ${fmtNum(info.sectionStart)} → ${fmtNum(info.sectionEnd)}</span>
+          <span class="section-id mono">${esc(section.id ?? `SEC-${idx + 1}`)}</span>
+          <span class="section-card-name">${esc(label)}</span>
+          <span class="section-card-pos muted small">starts ${fmtNum(info.sectionStart)} · ends ${fmtNum(info.sectionEnd)}</span>
         </div>
         <div class="section-card-controls">
-          <button class="btn btn-add btn-xs" data-action="add-axle" data-section-idx="${idx}">+ Axle</button>
-          <button class="btn btn-danger btn-xs" data-action="remove-train-section" data-section-idx="${idx}" title="Remove section">✕</button>
+          <button class="btn btn-add btn-sm" data-action="add-axle" data-section-idx="${idx}">+ Axle</button>
+          <button class="btn btn-danger btn-sm" data-action="remove-train-section" data-section-idx="${idx}" title="Remove this section">Remove Section</button>
         </div>
       </header>
 
       <div class="section-card-body">
         <details open data-panel-id="sec-${idx}-geometry">
-          <summary>Section Geometry</summary>
+          <summary><span class="summary-chevron">›</span><span class="summary-text">Section Geometry</span></summary>
           <div class="form-grid form-grid-section">
-            <label class="field-label">ID</label>
+            <label class="field-label">Section ID</label>
             ${textInput({ action: "mutate-train-section", "section-idx": idx, field: "id" }, section.id ?? "")}
-            <label class="field-label">Name</label>
+            <label class="field-label">Section Name</label>
             ${textInput({ action: "mutate-train-section", "section-idx": idx, field: "name" }, section.name ?? "")}
-            <label class="field-label">Type</label>
+            <label class="field-label">Section Type</label>
             ${selectInput({ action: "mutate-train-section", "section-idx": idx, field: "type" }, section.type ?? "", SECTION_TYPE_OPTIONS)}
-            <label class="field-label">Length</label>
+            <label class="field-label">Section Length</label>
             ${numInput({ action: "mutate-train-section", "section-idx": idx, field: "length" }, section.length, "0.001")}
-            <label class="field-label">Gap to Next</label>
+            <label class="field-label">Gap to Next Section</label>
             ${numInput({ action: "mutate-train-section", "section-idx": idx, field: "gapToNext" }, section.gapToNext ?? 0, "0.001")}
           </div>
         </details>
 
         <details open data-panel-id="sec-${idx}-axles">
-          <summary>Axle / Wheel-Pair Layout (${axles.length})</summary>
+          <summary><span class="summary-chevron">›</span><span class="summary-text">Axle / Wheel Layout</span><span class="summary-count">${axles.length}</span></summary>
           <div class="table-scroll">
             <table class="data-table data-table-axles">
               <thead>
                 <tr>
                   <th class="tc">#</th>
                   <th>Axle ID</th>
-                  <th>Offset</th>
-                  <th>Load</th>
-                  <th>Wheel Pair</th>
+                  <th>Axle Offset</th>
+                  <th>Axle Load</th>
+                  <th>Wheel Pair ID</th>
                   <th>Gauge</th>
-                  <th>Left Wheel</th>
-                  <th>Right Wheel</th>
+                  <th>Left Wheel ID</th>
+                  <th>Right Wheel ID</th>
                   <th></th>
                 </tr>
               </thead>
               <tbody>
                 ${axles.length === 0
-                  ? `<tr><td colspan="9" class="muted tc">No axles in this section.</td></tr>`
+                  ? `<tr><td colspan="9" class="muted tc">No axles in this section. Use + Axle to add one.</td></tr>`
                   : axles.map((a, ai) => renderAxleRow(a, idx, ai)).join("")}
               </tbody>
             </table>
@@ -157,31 +192,31 @@ function renderSectionCard(section, idx, info) {
         </details>
 
         <details data-panel-id="sec-${idx}-mass">
-          <summary>Mass &amp; Inertia Model (BEL/Stengel placeholders)</summary>
+          <summary><span class="summary-chevron">›</span><span class="summary-text">Mass &amp; Inertia Inputs</span><span class="summary-tag">not yet used by calculations</span></summary>
           <div class="form-grid form-grid-section">
             <label class="field-label">Mass</label>
             ${numInput({ action: "mutate-train-section", "section-idx": idx, field: "mass" }, section.mass, "0.001")}
-            <label class="field-label">Data Source</label>
-            ${selectInput({ action: "mutate-train-section", "section-idx": idx, field: "dataSource" }, section.dataSource ?? "PENDING", DATA_SOURCE_OPTIONS)}
+            <label class="field-label">Source</label>
+            ${selectInput({ action: "mutate-train-section", "section-idx": idx, field: "dataSource" }, section.dataSource ?? "PENDING", SOURCE_OPTIONS)}
 
-            <label class="field-label">CoM Offset (X)</label>
+            <label class="field-label">Center of Mass X</label>
             ${numInput({ action: "mutate-train-section", "section-idx": idx, field: "centerOfMass.x" }, section.centerOfMass?.x, "0.001")}
-            <label class="field-label">CoM Offset (Y)</label>
+            <label class="field-label">Center of Mass Y</label>
             ${numInput({ action: "mutate-train-section", "section-idx": idx, field: "centerOfMass.y" }, section.centerOfMass?.y, "0.001")}
-            <label class="field-label">CoM Offset (Z)</label>
+            <label class="field-label">Center of Mass Z</label>
             ${numInput({ action: "mutate-train-section", "section-idx": idx, field: "centerOfMass.z" }, section.centerOfMass?.z, "0.001")}
 
-            <label class="field-label">Iₓₓ (Roll)</label>
+            <label class="field-label">Inertia XX</label>
             ${numInput({ action: "mutate-train-section", "section-idx": idx, field: "inertia.Ixx" }, section.inertia?.Ixx, "0.001")}
-            <label class="field-label">Iᵧᵧ (Pitch)</label>
+            <label class="field-label">Inertia YY</label>
             ${numInput({ action: "mutate-train-section", "section-idx": idx, field: "inertia.Iyy" }, section.inertia?.Iyy, "0.001")}
-            <label class="field-label">Iᵤᵤ (Yaw)</label>
+            <label class="field-label">Inertia ZZ</label>
             ${numInput({ action: "mutate-train-section", "section-idx": idx, field: "inertia.Izz" }, section.inertia?.Izz, "0.001")}
 
-            <label class="field-label">Participates in Load Gen?</label>
+            <label class="field-label">Used in Calculations</label>
             <div class="field-checkbox-wrap">
               ${checkboxInput({ action: "mutate-train-section", "section-idx": idx, field: "participatesInLoadGen" }, section.participatesInLoadGen !== false)}
-              <span class="muted small">When unchecked, this section is excluded from wheel-load assembly (placeholder until math approval).</span>
+              <span class="muted small">When unchecked, this section is excluded from load assembly. Reserved for future use.</span>
             </div>
           </div>
         </details>
@@ -189,92 +224,146 @@ function renderSectionCard(section, idx, info) {
     </article>`;
 }
 
-// ── Right-column panels ──────────────────────────────────────────────────────
+// ── Right column panels ──────────────────────────────────────────────────────
 
-function renderDerivedPanel(m) {
+function renderDerivedGeometry(m) {
   return `
-    <section class="card summary-panel">
-      <h3>Derived Train Geometry</h3>
+    <section class="card calc-card">
+      <header class="card-header">
+        <h3>Derived Train Geometry</h3>
+        <span class="card-header-tag">calculated</span>
+      </header>
       <dl class="kv-grid kv-grid-tight">
-        <div><dt>Section Length Σ</dt><dd>${fmtNum(m.sectionLengthSum)}</dd></div>
-        <div><dt>Inter-section Gap Σ</dt><dd>${fmtNum(m.interSectionGapSum)}</dd></div>
         <div><dt>Total Train Length</dt><dd>${fmtNum(m.totalTrainLength)}</dd></div>
         <div><dt>First → Last Wheel</dt><dd>${fmtNum(m.firstToLastWheelDistance)}</dd></div>
-        <div><dt>Axle Count</dt><dd>${m.axleCount}</dd></div>
-        <div><dt>Wheel Pair Count</dt><dd>${m.wheelPairCount}</dd></div>
+        <div><dt>Sections</dt><dd>${m.sectionCount}</dd></div>
+        <div><dt>Axles</dt><dd>${m.axleCount}</dd></div>
+        <div><dt>Wheel Pairs</dt><dd>${m.wheelPairCount}</dd></div>
+        <div><dt>Section Length Σ</dt><dd>${fmtNum(m.sectionLengthSum)}</dd></div>
+        <div><dt>Inter-section Gap Σ</dt><dd>${fmtNum(m.interSectionGapSum)}</dd></div>
       </dl>
-      <h4 class="subhead">Cumulative Section Starts</h4>
+      <h4 class="subhead">Section Start &amp; End Positions</h4>
       <table class="data-table data-table-tight">
-        <thead><tr><th>Section</th><th>Start</th><th>End</th><th>Gap</th></tr></thead>
+        <thead><tr><th>Section</th><th>Start</th><th>End</th><th>Gap to Next</th></tr></thead>
         <tbody>
-          ${m.sections.map((s) => `
-            <tr>
-              <td class="mono">${esc(s.id)}</td>
-              <td>${fmtNum(s.sectionStart)}</td>
-              <td>${fmtNum(s.sectionEnd)}</td>
-              <td>${fmtNum(s.gapToNext)}</td>
-            </tr>`).join("")}
-        </tbody>
-      </table>
-    </section>`;
-}
-
-function renderValidationPanel(validation, modelWarnings) {
-  const blocking = modelWarnings.filter((w) => w.severity === "blocking");
-  const info = modelWarnings.filter((w) => w.severity === "info");
-  const schemaErrors = validation.errors ?? [];
-
-  return `
-    <section class="card">
-      <h3>Validation &amp; Readiness</h3>
-      ${schemaErrors.length === 0 && blocking.length === 0
-        ? `<p class="ok">No blocking issues.</p>`
-        : ""}
-      ${schemaErrors.length > 0 ? `
-        <h4 class="subhead">Schema Errors (${schemaErrors.length})</h4>
-        <ul class="error-list">${schemaErrors.map((e) => `<li>${esc(e)}</li>`).join("")}</ul>` : ""}
-      ${blocking.length > 0 ? `
-        <h4 class="subhead">Engineering Warnings — Blocking</h4>
-        <ul class="error-list">${blocking.map((w) => `<li><span class="mono small muted">${esc(w.scope)}</span> ${esc(w.message)}</li>`).join("")}</ul>` : ""}
-      ${info.length > 0 ? `
-        <h4 class="subhead">Engineering Warnings — Info / Pending</h4>
-        <ul class="warning-list">${info.map((w) => `<li><span class="mono small muted">${esc(w.scope)}</span> ${esc(w.message)}</li>`).join("")}</ul>` : ""}
-    </section>`;
-}
-
-function renderMassInertiaSummary(m) {
-  return `
-    <section class="card">
-      <h3>Mass &amp; Inertia Summary</h3>
-      <table class="data-table data-table-tight">
-        <thead>
-          <tr><th>Section</th><th>Mass</th><th>CoM (x,y,z)</th><th>Source</th></tr>
-        </thead>
-        <tbody>
-          ${m.sections.map((s) => {
-            const com = s.centerOfMass ?? {};
-            const comStr = `${fmtNum(com.x)}, ${fmtNum(com.y)}, ${fmtNum(com.z)}`;
-            return `
+          ${m.sections.length === 0
+            ? `<tr><td colspan="4" class="muted tc">No sections defined yet.</td></tr>`
+            : m.sections.map((s) => `
               <tr>
                 <td class="mono">${esc(s.id)}</td>
-                <td>${fmtNum(s.mass)}</td>
-                <td class="small">${esc(comStr)}</td>
-                <td><span class="nav-tag">${esc(s.dataSource ?? "PENDING")}</span></td>
-              </tr>`;
-          }).join("")}
+                <td>${fmtNum(s.sectionStart)}</td>
+                <td>${fmtNum(s.sectionEnd)}</td>
+                <td>${fmtNum(s.gapToNext)}</td>
+              </tr>`).join("")}
         </tbody>
       </table>
-      <p class="field-hint">Inertia + COM are placeholders until BEL/Stengel inputs are approved (no formulas applied yet).</p>
+    </section>`;
+}
+
+function renderChecks(validation, modelWarnings) {
+  const blocking = modelWarnings.filter((w) => w.severity === "blocking");
+  const info = modelWarnings.filter((w) => w.severity === "info");
+  const schemaErrors = (validation?.errors ?? []).map((e) => humanizeSchemaError(e));
+
+  const allBlocking = [...schemaErrors, ...blocking.map((w) => w.message)];
+  const noIssues = allBlocking.length === 0 && info.length === 0;
+
+  return `
+    <section class="card checks-card">
+      <header class="card-header">
+        <h3>Checks</h3>
+        <span class="card-header-hint">Plain-language status of your train inputs.</span>
+      </header>
+      ${noIssues ? `<p class="ok">Everything looks good. No issues to report.</p>` : ""}
+
+      ${allBlocking.length > 0 ? `
+        <div class="checks-group checks-group-blocking">
+          <div class="checks-group-title">
+            <span class="check-dot dot-bad"></span>Blocking Issues
+            <span class="checks-count">${allBlocking.length}</span>
+          </div>
+          <ul class="checks-list">
+            ${allBlocking.map((m) => `<li>${esc(m)}</li>`).join("")}
+          </ul>
+        </div>` : ""}
+
+      ${info.length > 0 ? `
+        <div class="checks-group checks-group-info">
+          <div class="checks-group-title">
+            <span class="check-dot dot-info"></span>Information
+            <span class="checks-count">${info.length}</span>
+          </div>
+          <ul class="checks-list checks-list-info">
+            ${info.map((w) => `<li>${esc(w.message)}</li>`).join("")}
+          </ul>
+        </div>` : ""}
+    </section>`;
+}
+
+function humanizeSchemaError(err) {
+  // Schema messages can include paths like "sections[0].mass". Convert to plain language.
+  // Best-effort heuristic: the underlying validator is loose, so we just strip obvious jargon.
+  return String(err)
+    .replace(/sections\[(\d+)\]/g, (_, n) => `Section ${Number(n) + 1}`)
+    .replace(/\.axles\[(\d+)\]/g, (_, n) => ` axle ${Number(n) + 1}`)
+    .replace(/centerOfMass\.([xyz])/gi, (_, k) => `Center of Mass ${k.toUpperCase()}`)
+    .replace(/inertia\.I([a-z]{2})/gi, (_, k) => `Inertia ${k.toUpperCase()}`)
+    .replace(/\bparticipatesInLoadGen\b/g, "Used in Calculations")
+    .replace(/\bdataSource\b/g, "Source")
+    .replace(/\baxleId\b/g, "Axle ID")
+    .replace(/\bwheelPairId\b/g, "Wheel Pair ID")
+    .replace(/\btrainId\b/g, "Train ID")
+    .replace(/\btrainName\b/g, "Train Name")
+    .replace(/\bvehicleType\b/g, "Vehicle Type")
+    .replace(/\bgapToNext\b/g, "Gap to Next Section");
+}
+
+function renderCalculationUsage() {
+  return `
+    <section class="card usage-card">
+      <header class="card-header">
+        <h3>Calculation Usage</h3>
+        <span class="card-header-hint">Which inputs are read by the engine today.</span>
+      </header>
+      <div class="usage-group usage-group-now">
+        <div class="usage-group-title"><span class="usage-dot dot-now"></span>Used by calculations now</div>
+        <ul class="usage-list">
+          <li>Section Length</li>
+          <li>Axle Offset</li>
+          <li>Axle Load</li>
+        </ul>
+      </div>
+      <div class="usage-group usage-group-saved">
+        <div class="usage-group-title"><span class="usage-dot dot-saved"></span>Saved now, used later</div>
+        <ul class="usage-list">
+          <li>Train ID, Train Name, Vehicle Type, Notes</li>
+          <li>Section ID, Section Name, Section Type</li>
+          <li>Gap to Next Section</li>
+          <li>Axle ID, Wheel Pair ID, Gauge, Left/Right Wheel ID</li>
+        </ul>
+      </div>
+      <div class="usage-group usage-group-not-yet">
+        <div class="usage-group-title"><span class="usage-dot dot-not-yet"></span>Not yet used by calculations</div>
+        <ul class="usage-list">
+          <li>Mass</li>
+          <li>Center of Mass (X, Y, Z)</li>
+          <li>Inertia (XX, YY, ZZ)</li>
+          <li>Source · Used in Calculations</li>
+        </ul>
+      </div>
     </section>`;
 }
 
 // ── Bottom global axle table ─────────────────────────────────────────────────
 
-function renderGlobalAxleTable(m) {
+function renderAxlePositionTable(m) {
   return `
-    <section class="card">
-      <h3>Global Axle Position Table</h3>
-      <p class="field-hint">Axle global position = section cumulative start + axle offset. Includes inter-section gaps. (Engine math currently uses section length only — see <code>docs/data-model.md</code>.)</p>
+    <section class="card calc-card">
+      <header class="card-header">
+        <h3>Axle Position Table</h3>
+        <span class="card-header-tag">calculated</span>
+      </header>
+      <p class="field-hint">Global Position is calculated from each section's start position plus the axle's offset within the section.</p>
       <div class="table-scroll">
         <table class="data-table data-table-tight">
           <thead>
@@ -282,23 +371,21 @@ function renderGlobalAxleTable(m) {
               <th class="tc">#</th>
               <th>Axle ID</th>
               <th>Section</th>
-              <th>Section Idx</th>
               <th>Offset</th>
               <th>Global Position</th>
-              <th>Wheel Pair</th>
+              <th>Wheel Pair ID</th>
               <th>Gauge</th>
               <th>Load</th>
             </tr>
           </thead>
           <tbody>
             ${m.axles.length === 0
-              ? `<tr><td colspan="9" class="muted tc">No axles defined.</td></tr>`
+              ? `<tr><td colspan="8" class="muted tc">No axles defined yet.</td></tr>`
               : m.axles.map((a, i) => `
                 <tr>
-                  <td class="tc muted mono small">${i}</td>
+                  <td class="tc muted mono small">${i + 1}</td>
                   <td class="mono">${esc(a.axleId)}</td>
-                  <td class="mono">${esc(a.sectionId)}</td>
-                  <td class="tc">${a.sectionIndex}</td>
+                  <td><span class="mono small">${esc(a.sectionId)}</span> <span class="muted small">${esc(a.sectionLabel ?? "")}</span></td>
                   <td>${fmtNum(a.offset)}</td>
                   <td><strong>${fmtNum(a.globalPosition)}</strong></td>
                   <td class="mono small">${esc(a.wheelPairId ?? "—")}</td>
@@ -315,38 +402,43 @@ function renderGlobalAxleTable(m) {
 
 export function renderTrainView({ train, validation }) {
   if (!train) {
-    return `<section class="card"><h2>Train</h2><p class="muted">No train data loaded.</p></section>`;
+    return `<section class="card"><h2>Train</h2><p class="muted">No train data loaded yet.</p></section>`;
   }
 
   const m = analyzeTrainModel(train);
   const sections = train.sections ?? [];
+  const blockingCount = m.warnings.filter((w) => w.severity === "blocking").length;
+  const checksOk = (validation?.valid ?? true) && blockingCount === 0;
 
   return `
-    ${renderKpiStrip(train, m, validation.valid)}
+    ${renderSummaryStrip(train, m, checksOk)}
 
     <div class="train-workspace">
       <div class="train-workspace-left">
-        ${renderTrainMetaBlock(train)}
+        ${renderTrainDetails(train)}
 
         <section class="card">
-          <div class="panel-header-row">
+          <header class="card-header">
             <h3>Train Formation</h3>
-            <button class="btn btn-add btn-sm" data-action="add-train-section">+ Add Section</button>
-          </div>
+            <div class="card-header-actions">
+              <span class="card-header-hint">${sections.length} section${sections.length === 1 ? "" : "s"}</span>
+              <button class="btn btn-add btn-sm" data-action="add-train-section">+ Add Section</button>
+            </div>
+          </header>
           ${sections.length === 0
-            ? `<p class="muted">No sections defined. Add the lead car to begin.</p>`
+            ? `<p class="muted empty-hint">No sections defined yet. Click <strong>+ Add Section</strong> to begin building the train.</p>`
             : sections.map((s, i) => renderSectionCard(s, i, m.sections[i])).join("")}
-          <p class="field-hint">Blur (click away) to commit text and number edits. Selects and checkboxes commit immediately.</p>
+          <p class="field-hint">Click away from a text or number field to save your edit. Selects and checkboxes save immediately.</p>
         </section>
       </div>
 
       <aside class="train-workspace-right">
-        ${renderDerivedPanel(m)}
-        ${renderValidationPanel(validation, m.warnings)}
-        ${renderMassInertiaSummary(m)}
+        ${renderDerivedGeometry(m)}
+        ${renderChecks(validation, m.warnings)}
+        ${renderCalculationUsage()}
       </aside>
     </div>
 
-    ${renderGlobalAxleTable(m)}
+    ${renderAxlePositionTable(m)}
   `;
 }

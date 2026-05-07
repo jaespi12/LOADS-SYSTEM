@@ -141,6 +141,70 @@ Replaces the generic "Sections & Axles" form with a BEL/Stengel-aligned vehicle-
 - When a user clicks a `<summary>` immediately after a blur-triggered re-render, the click lands on a detached element and is lost — the user must click again. This edge case is rare and acceptable until a full virtual-DOM or diff-patch approach is considered.
 - No route-level scroll restoration (each tab renders fresh on activate).
 
+## Milestone E — Train Tab Product Polish (completed)
+
+### Objectives
+- Strip developer / vendor wording from the visible Train tab UI.
+- Make editable vs. calculated values visually unambiguous.
+- Replace the schema-style Validation panel with a plain-language Checks panel.
+- Add an explicit Calculation Usage panel that tells users which inputs are read by the engine today, saved for later, or not yet used.
+- Improve interaction clarity: larger chevrons, denser summary strip, clearer card headers.
+
+### Renamed labels (visible UI)
+| Was | Now |
+| --- | --- |
+| Train Metadata | Train Details |
+| Sections & Axles | Train Formation |
+| Mass & Inertia Model (BEL/Stengel placeholders) | Mass & Inertia Inputs (with "not yet used by calculations" tag) |
+| Validation & Readiness | Checks |
+| CoM Offset (X / Y / Z) | Center of Mass X / Y / Z |
+| Iₓₓ (Roll), Iᵧᵧ (Pitch), Iᵤᵤ (Yaw) | Inertia XX / YY / ZZ |
+| Participates in Load Gen? | Used in Calculations |
+| Data Source | Source |
+| KPI Strip | Summary Strip (with input / count / calculated badges) |
+| Global Axle Position Table | Axle Position Table (tagged "calculated") |
+
+### Vendor / developer wording removed from UI
+- `BEL`, `Stengel`, `CoM`, `placeholder`, `readiness`, `schema`, `section idx`, `axle idx`, `participatesInLoadGen`, `dataSource`, `sections[0].mass`-style paths.
+
+### Editable vs. Calculated visual signals
+- Summary strip cards now carry one of `kpi-badge-{input,count,calc}` chips and color-coded left borders (cyan = input, violet = count, slate = calculated, yellow = status).
+- Calculated cards (Derived Train Geometry, Axle Position Table) carry a `card-header-tag` reading "calculated" and use the slate left-border treatment.
+
+### Checks panel (plain language)
+- Two groups: Blocking Issues (red dot, count chip) and Information (yellow dot, count chip).
+- Schema-validator output is run through `humanizeSchemaError` to convert paths like `sections[0].centerOfMass.z` into "Section 1: Center of Mass Z".
+- `train-model.js` warning messages rewritten to plain English ("Two axles share the same ID", "Lead car: mass is not yet entered", etc).
+
+### Calculation Usage panel
+- Three groups with colored dots and explicit lists:
+  - Used by calculations now: Section Length, Axle Offset, Axle Load.
+  - Saved now, used later: IDs, names, types, gauge, gap-to-next, wheel pair / wheel IDs, notes.
+  - Not yet used by calculations: Mass, Center of Mass, Inertia, Source, Used in Calculations toggle.
+
+### Interaction & visual fixes
+- `<summary>` chevrons are now 1.25rem `<span>` elements that rotate 90° on `[open]`; click target is much larger.
+- `field-select` dropdowns render an explicit SVG arrow (replaces tiny native triangle); accent color on hover.
+- Section card header uses a soft gradient and dedicated `.section-card-name` slot so identity is obvious.
+- `card-header` is now a shared component used by every card (header + hint or actions, optional tag).
+- Empty Train Formation state shows a dashed callout pointing to + Add Section.
+
+### Tests
+- `train-model.test.js`: assertions updated for new plain-language messages; banned-term regex check on every emitted warning; section-label fallback (name → id → "Section N") covered.
+- `train-view-panels.test.js`: rendered HTML scanned for banned UI terms; required product-language labels asserted; calculated/input/count badges asserted; humanized blocking-issue text asserted.
+
+### Files changed
+- `app/scripts/views/train-view.js` (full rewrite)
+- `app/scripts/utils/train-model.js` (warning messages, section labels)
+- `app/styles/components.css` (summary strip, card-header, calc-card, checks card, usage card, larger chevron, larger select arrow)
+- `app/tests/train-model.test.js`, `app/tests/train-view-panels.test.js`
+- `docs/data-model.md`, `docs/ui-ux-standard.md`, `docs/implementation-plan.md`
+
+### Intentional deferred items
+- Drag-to-reorder sections.
+- Per-section "calculated" overlay on each Mass/Inertia field (currently only the panel-level tag).
+- Inline rename of section card title (currently edited inside Section Geometry panel only).
+
 ## Workflow per AGENTS.md Implementation Order
 1. Update shared contract source (`shared/data`, `shared/schemas`).
 2. Update example fixtures (`app/data`).
