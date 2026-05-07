@@ -1,5 +1,6 @@
 const state = {
   initialized: false,
+  schemas: {},
   lookups: {},
   project: null,
   designBasis: null,
