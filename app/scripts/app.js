@@ -15,11 +15,67 @@ import { generateTrainPositions } from "./utils/position-generator.js";
 import { renderAuditView } from "./views/audit-view.js";
 import { renderEnvelopesView } from "./views/envelopes-view.js";
 import { renderExportView } from "./views/export-view.js";
+import { renderProjectControls } from "./components/project-controls.js";
+import {
+  buildProjectPackage,
+  applyProjectPackage,
+  saveToStorage,
+  loadFromStorage,
+  clearStorage,
+  downloadAsJson,
+  readJsonFile
+} from "./utils/persistence.js";
 
 async function loadJson(path) {
   const response = await fetch(path);
   if (!response.ok) throw new Error(`Failed to load ${path}`);
   return response.json();
+}
+
+// ── Fixture snapshots (kept for Reset action) ────────────────────────────────
+
+const fixtureSnapshots = {};
+
+// ── Autosave (debounced) ─────────────────────────────────────────────────────
+
+const AUTOSAVE_DELAY_MS = 1500;
+const MUTATION_ACTIONS = new Set([
+  "mutate-design-basis",
+  "mutate-geometry-station",
+  "add-geometry-station",
+  "remove-geometry-station",
+  "mutate-train-section",
+  "mutate-axle",
+  "add-axle",
+  "remove-axle",
+  "mutate-kinematics-entry",
+  "add-kinematics-entry",
+  "remove-kinematics-entry",
+  "toggle-load-family",
+  "mutate-train-position",
+  "regen-train-positions"
+]);
+
+let autosaveTimer = null;
+function scheduleAutosave() {
+  if (autosaveTimer) clearTimeout(autosaveTimer);
+  autosaveTimer = setTimeout(() => {
+    autosaveTimer = null;
+    const st = getState();
+    if (!st.dirty) return;
+    const pkg = buildProjectPackage(st);
+    const result = saveToStorage(pkg);
+    if (result.ok) {
+      setState({ dirty: false, lastSavedAt: pkg.savedAt, persistenceMessage: { kind: "info", text: "Autosaved." } });
+      setTimeout(() => {
+        if (getState().persistenceMessage?.text === "Autosaved.") {
+          setState({ persistenceMessage: null });
+        }
+      }, 2000);
+    } else {
+      setState({ persistenceMessage: { kind: "error", text: `Autosave failed: ${result.error}` } });
+    }
+  }, AUTOSAVE_DELAY_MS);
 }
 
 // ── Grouped-case recompute helper ────────────────────────────────────────────
@@ -34,6 +90,29 @@ function recomputeGroupedCases(st) {
     errors: perCaseVal.flatMap((r, i) => r.errors.map((e) => `[${result.groupedCases[i].groupedCaseId}] ${e}`))
   };
   return { groupingResult: result, groupedCases: result.groupedCases, groupedCaseValidation, groupedCaseReadiness: readiness };
+}
+
+// ── Full recompute (used after Load / Import / Reset) ────────────────────────
+
+function recomputeAllValidation(st) {
+  const { schemas, lookups } = st;
+  const requiredFamilyIds = (lookups?.loadFamilyTypes?.families ?? []).filter((f) => f.required).map((f) => f.id);
+  const gc = recomputeGroupedCases(st);
+  return {
+    groupingResult: gc.groupingResult,
+    groupedCases: gc.groupedCases,
+    groupedCaseValidation: gc.groupedCaseValidation,
+    validation: {
+      designBasis: validateAgainstSchema(schemas.designBasis, st.designBasis),
+      geometry: validateAgainstSchema(schemas.geometry, st.geometry),
+      train: validateAgainstSchema(schemas.train, st.train),
+      kinematics: validateAgainstSchema(schemas.kinematics, st.kinematics),
+      loadFamilies: validateAgainstSchema(schemas.loadFamilies, st.loadFamilies),
+      requiredLoadFamilies: validateRequiredLoadFamilies(st.loadFamilies, requiredFamilyIds),
+      trainPositions: validateAgainstSchema(schemas.trainPositions, st.trainPositions),
+      groupedCaseReadiness: gc.groupedCaseReadiness
+    }
+  };
 }
 
 // ── Mutation handlers ─────────────────────────────────────────────────────────
@@ -261,34 +340,144 @@ function handleAction(action, target) {
       });
       break;
     }
+
+    // ── Persistence actions ──────────────────────────────────────────────
+
+    case "save-project": {
+      const pkg = buildProjectPackage(state);
+      const result = saveToStorage(pkg);
+      if (result.ok) {
+        setState({ dirty: false, lastSavedAt: pkg.savedAt, persistenceMessage: { kind: "info", text: "Saved." } });
+      } else {
+        setState({ persistenceMessage: { kind: "error", text: `Save failed: ${result.error}` } });
+      }
+      break;
+    }
+
+    case "reload-project": {
+      const result = loadFromStorage();
+      if (!result.ok) {
+        setState({ persistenceMessage: { kind: "error", text: `Reload failed: ${result.error}` } });
+        break;
+      }
+      if (!result.present) {
+        setState({ persistenceMessage: { kind: "warn", text: "No saved project in storage." } });
+        break;
+      }
+      try {
+        const patch = applyProjectPackage(result.package);
+        const merged = { ...state, ...patch };
+        const recomputed = recomputeAllValidation(merged);
+        setState({
+          ...patch,
+          ...recomputed,
+          dirty: false,
+          loadedFromStorage: true,
+          lastSavedAt: result.package.savedAt ?? null,
+          persistenceMessage: { kind: "info", text: "Reloaded from storage." }
+        });
+      } catch (err) {
+        setState({ persistenceMessage: { kind: "error", text: `Reload failed: ${err.message}` } });
+      }
+      break;
+    }
+
+    case "reset-project": {
+      clearStorage();
+      const merged = {
+        ...state,
+        project: fixtureSnapshots.project,
+        designBasis: fixtureSnapshots.designBasis,
+        geometry: fixtureSnapshots.geometry,
+        train: fixtureSnapshots.train,
+        kinematics: fixtureSnapshots.kinematics,
+        loadFamilies: fixtureSnapshots.loadFamilies,
+        trainPositions: fixtureSnapshots.trainPositions
+      };
+      const recomputed = recomputeAllValidation(merged);
+      setState({
+        project: merged.project,
+        designBasis: merged.designBasis,
+        geometry: merged.geometry,
+        train: merged.train,
+        kinematics: merged.kinematics,
+        loadFamilies: merged.loadFamilies,
+        trainPositions: merged.trainPositions,
+        ...recomputed,
+        dirty: false,
+        loadedFromStorage: false,
+        lastSavedAt: null,
+        persistenceMessage: { kind: "info", text: "Reset to bundled fixtures." }
+      });
+      break;
+    }
+
+    case "export-project": {
+      const pkg = buildProjectPackage(state);
+      const projectId = state.project?.projectId ?? "loads-project";
+      downloadAsJson(pkg, `${projectId}-${pkg.savedAt.replace(/[:.]/g, "-")}.json`);
+      setState({ persistenceMessage: { kind: "info", text: "Exported project package." } });
+      break;
+    }
+
+    case "import-project-file": {
+      const file = target.files?.[0];
+      if (!file) break;
+      readJsonFile(file).then((parsed) => {
+        try {
+          const patch = applyProjectPackage(parsed);
+          const stNow = getState();
+          const merged = { ...stNow, ...patch };
+          const recomputed = recomputeAllValidation(merged);
+          setState({
+            ...patch,
+            ...recomputed,
+            dirty: true,
+            loadedFromStorage: false,
+            persistenceMessage: { kind: "info", text: `Imported package (savedAt ${parsed.savedAt ?? "unknown"}). Click Save to persist.` }
+          });
+        } catch (err) {
+          setState({ persistenceMessage: { kind: "error", text: `Import failed: ${err.message}` } });
+        }
+      }).catch((err) => {
+        setState({ persistenceMessage: { kind: "error", text: `Import failed: ${err.message}` } });
+      });
+      // Clear the input so the same file can be re-imported
+      target.value = "";
+      break;
+    }
+  }
+
+  if (MUTATION_ACTIONS.has(action)) {
+    setState({ dirty: true, persistenceMessage: null });
+    scheduleAutosave();
   }
 }
 
 // ── Event delegation ─────────────────────────────────────────────────────────
 
 function setupEventHandlers() {
-  const root = document.querySelector("#app-root");
+  // Listen on document.body so project-controls in the header (outside #app-root) also work
+  const target = document.body;
 
-  // blur fires on number/text inputs after edit is committed
-  root.addEventListener("blur", (e) => {
+  target.addEventListener("blur", (e) => {
     const action = e.target.dataset?.action;
     if (!action) return;
     const tag = e.target.tagName;
     if (tag === "INPUT" || tag === "TEXTAREA") handleAction(action, e.target);
   }, true);
 
-  // change fires immediately on selects and checkboxes
-  root.addEventListener("change", (e) => {
+  target.addEventListener("change", (e) => {
     const action = e.target.dataset?.action;
     if (!action) return;
     const tag = e.target.tagName;
-    if (tag === "SELECT" || (tag === "INPUT" && e.target.type === "checkbox")) {
+    const type = e.target.type;
+    if (tag === "SELECT" || (tag === "INPUT" && (type === "checkbox" || type === "file"))) {
       handleAction(action, e.target);
     }
   });
 
-  // click for buttons
-  root.addEventListener("click", (e) => {
+  target.addEventListener("click", (e) => {
     const btn = e.target.closest("[data-action]");
     if (!btn) return;
     const tag = btn.tagName;
@@ -341,18 +530,51 @@ async function bootstrap() {
   };
 
   const designBasis = project.designBasis ?? null;
+  const lookups = { codeSets, unitSystems, loadFamilyTypes, rideStates, exportTargets, statusOptions };
+
+  // Snapshot bundled fixtures so Reset can restore them later (deep-clone via JSON)
+  fixtureSnapshots.project = JSON.parse(JSON.stringify(project));
+  fixtureSnapshots.designBasis = JSON.parse(JSON.stringify(designBasis));
+  fixtureSnapshots.geometry = JSON.parse(JSON.stringify(geometry));
+  fixtureSnapshots.train = JSON.parse(JSON.stringify(train));
+  fixtureSnapshots.kinematics = JSON.parse(JSON.stringify(kinematics));
+  fixtureSnapshots.loadFamilies = JSON.parse(JSON.stringify(loadFamilies));
+  fixtureSnapshots.trainPositions = JSON.parse(JSON.stringify(trainPositions));
+
+  // If the user has a previously-saved package in localStorage, apply it on top of fixtures.
+  let activeProject = project;
+  let activeDesignBasis = designBasis;
+  let activeGeometry = geometry;
+  let activeTrain = train;
+  let activeKinematics = kinematics;
+  let activeLoadFamilies = loadFamilies;
+  let activeTrainPositions = trainPositions;
+  let lastSavedAt = null;
+  let loadedFromStorage = false;
+  let persistenceMessage = null;
+
+  const loaded = loadFromStorage();
+  if (loaded.ok && loaded.present) {
+    try {
+      const patch = applyProjectPackage(loaded.package);
+      activeProject = patch.project ?? activeProject;
+      activeDesignBasis = patch.designBasis ?? activeDesignBasis;
+      activeGeometry = patch.geometry ?? activeGeometry;
+      activeTrain = patch.train ?? activeTrain;
+      activeKinematics = patch.kinematics ?? activeKinematics;
+      activeLoadFamilies = patch.loadFamilies ?? activeLoadFamilies;
+      activeTrainPositions = patch.trainPositions ?? activeTrainPositions;
+      lastSavedAt = loaded.package.savedAt ?? null;
+      loadedFromStorage = true;
+      persistenceMessage = { kind: "info", text: "Loaded saved project from browser storage." };
+    } catch (err) {
+      persistenceMessage = { kind: "error", text: `Saved project ignored: ${err.message}` };
+    }
+  }
+
   const requiredFamilyIds = (loadFamilyTypes.families ?? []).filter((f) => f.required).map((f) => f.id);
-
-  const partial = {
-    schemas,
-    train,
-    geometry,
-    trainPositions,
-    loadFamilies
-  };
-
-  const groupedCaseReadiness = validateGroupedCaseReadiness({ train, geometry, trainPositions });
-  const groupingResult = buildGroupedCases({ trainPositions, train, readiness: groupedCaseReadiness });
+  const groupedCaseReadiness = validateGroupedCaseReadiness({ train: activeTrain, geometry: activeGeometry, trainPositions: activeTrainPositions });
+  const groupingResult = buildGroupedCases({ trainPositions: activeTrainPositions, train: activeTrain, readiness: groupedCaseReadiness });
   const perCaseValidation = groupingResult.groupedCases.map((gc) => validateAgainstSchema(groupedCaseSchema, gc));
   const groupedCaseValidation = {
     valid: perCaseValidation.every((r) => r.valid),
@@ -364,25 +586,29 @@ async function bootstrap() {
     schemas,
     navRegistry,
     route: resolveRoute(getCurrentRoute(), navRegistry),
-    lookups: { codeSets, unitSystems, loadFamilyTypes, rideStates, exportTargets, statusOptions },
-    project,
-    designBasis,
-    geometry,
-    train,
-    kinematics,
-    loadFamilies,
-    trainPositions,
+    lookups,
+    project: activeProject,
+    designBasis: activeDesignBasis,
+    geometry: activeGeometry,
+    train: activeTrain,
+    kinematics: activeKinematics,
+    loadFamilies: activeLoadFamilies,
+    trainPositions: activeTrainPositions,
+    dirty: false,
+    lastSavedAt,
+    loadedFromStorage,
+    persistenceMessage,
     groupedCases: groupingResult.groupedCases,
     groupingResult,
     groupedCaseValidation,
     validation: {
-      designBasis: validateAgainstSchema(designBasisSchema, designBasis),
-      geometry: validateAgainstSchema(geometrySchema, geometry),
-      train: validateAgainstSchema(trainSchema, train),
-      kinematics: validateAgainstSchema(kinematicsSchema, kinematics),
-      loadFamilies: validateAgainstSchema(loadFamilySchema, loadFamilies),
-      requiredLoadFamilies: validateRequiredLoadFamilies(loadFamilies, requiredFamilyIds),
-      trainPositions: validateAgainstSchema(trainPositionSchema, trainPositions),
+      designBasis: validateAgainstSchema(designBasisSchema, activeDesignBasis),
+      geometry: validateAgainstSchema(geometrySchema, activeGeometry),
+      train: validateAgainstSchema(trainSchema, activeTrain),
+      kinematics: validateAgainstSchema(kinematicsSchema, activeKinematics),
+      loadFamilies: validateAgainstSchema(loadFamilySchema, activeLoadFamilies),
+      requiredLoadFamilies: validateRequiredLoadFamilies(activeLoadFamilies, requiredFamilyIds),
+      trainPositions: validateAgainstSchema(trainPositionSchema, activeTrainPositions),
       groupedCaseReadiness
     }
   });
@@ -433,12 +659,14 @@ function renderActiveView(state) {
 function render() {
   const root = document.querySelector("#app-root");
   const version = document.querySelector("#app-version");
+  const controlsSlot = document.querySelector("#project-controls-slot");
   const state = getState();
   const { initialized, project, navRegistry, route } = state;
 
   version.textContent = `v${APP_CONFIG.version}`;
 
   if (!initialized) {
+    if (controlsSlot) controlsSlot.innerHTML = "";
     root.innerHTML = `
       <aside class="app-sidebar"></aside>
       <div class="app-content">
@@ -446,6 +674,10 @@ function render() {
       </div>
     `;
     return;
+  }
+
+  if (controlsSlot) {
+    controlsSlot.innerHTML = renderProjectControls(state);
   }
 
   const sidebar = renderSidebar({

@@ -74,6 +74,23 @@ A `formulaScope` may only be promoted to `APPROVED` after **all four** of:
 7. Audit log contract for orchestration + computation runs.
 8. Persistence story (local snapshot vs. session-only) for wheel-load and envelope results.
 
+### Persistence Milestone (in place)
+The app persists user edits to `window.localStorage` (key `LOADS_SYSTEM_PROJECT_v1`) and supports explicit Save / Reload / Reset, plus JSON Export / Import. See `docs/data-model.md#project-package-persistence-format` for the package shape.
+
+| Capability | Status |
+| --- | --- |
+| Dirty-state tracking on every mutation | Done |
+| Debounced autosave (1.5 s after last edit) | Done |
+| Explicit Save / Reload / Reset buttons | Done |
+| Export / Import full project package as JSON | Done |
+| Bootstrap auto-applies last saved package on page load | Done |
+| Multi-project storage (named slots) | Deferred |
+| Cross-tab synchronization via `storage` events | Deferred |
+| Schema-package migrations (e.g. v1 → v2) | Stub only — `applyProjectPackage` rejects unknown versions; no migration path yet |
+| Server-side persistence | Out of scope (no backend per AGENTS.md) |
+| Undo / redo history | Deferred |
+| Snapshot of computed wheel-load and envelope outputs | Deferred (gated on math approval) |
+
 ## Workflow per AGENTS.md Implementation Order
 1. Update shared contract source (`shared/data`, `shared/schemas`).
 2. Update example fixtures (`app/data`).

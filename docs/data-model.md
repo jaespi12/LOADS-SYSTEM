@@ -100,8 +100,35 @@ Required fields: `envelopeId`, `computationContext`, `stationStations[]`, `compo
 
 Each scope records `status` (`PENDING_APPROVAL` | `APPROVED` | `DEPRECATED`), `candidateCodeIds`, `approvedCodeIds`, `consumes`, and `produces`. Promotion from `PENDING_APPROVAL` to `APPROVED` is gated by the workflow in `docs/design-basis.md`.
 
+## Project Package (Persistence Format)
+The runtime serializes a "project package" to `window.localStorage` (key `LOADS_SYSTEM_PROJECT_v1`) and to/from JSON on Export/Import. The package is a snapshot of user-editable input artifacts only — computed state (grouped cases, validation results, schemas, lookups, nav registry, route) is intentionally **not** persisted; it is recomputed on every load.
+
+Top-level fields:
+
+| Field | Type | Notes |
+| --- | --- | --- |
+| `schemaVersion` | integer | Currently `1`. `applyProjectPackage` rejects unknown versions. |
+| `savedAt` | ISO 8601 string | UTC timestamp written by `buildProjectPackage`. |
+| `project` | object | Full project metadata (`projectId`, `name`, nested `designBasis`). |
+| `designBasis` | object | Mirrors `project.designBasis` at top-level for direct addressability. |
+| `geometry` | object | `geometry-station.schema.json`-conformant profile. |
+| `train` | object | `train-section.schema.json`-conformant train. |
+| `kinematics` | object | `kinematics-profile.schema.json`-conformant profile. |
+| `loadFamilies` | object | `load-family-profile.schema.json`-conformant selection. |
+| `trainPositions` | object | `train-position-profile.schema.json`-conformant profile. |
+
+The single source-of-truth for the persisted-field list is `PERSISTED_FIELDS` in `app/scripts/utils/persistence.js`. Adding a new persisted artifact requires:
+1. Updating `PERSISTED_FIELDS`.
+2. Bumping `SCHEMA_VERSION` if the change is not backward-compatible.
+3. Updating this table.
+
+### Dirty-state tracking
+`store.js` carries `dirty`, `lastSavedAt`, `loadedFromStorage`, and `persistenceMessage` flags. Mutation handlers in `app.js` set `dirty: true` and schedule a debounced autosave (1.5 s). Save / Reload / Reset / Export / Import actions clear dirty as appropriate.
+
 ## Out of Scope (still gated)
 - Wheel-load distribution math (numeric outputs remain `null`).
 - Superposition of load-family contributions.
 - Envelope aggregation math.
 - Any equation-bearing engine modules.
+- Multi-project storage (current key holds a single active project).
+- Server-side persistence; collaborative editing; history/undo beyond browser storage.

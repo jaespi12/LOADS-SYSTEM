@@ -9,6 +9,12 @@ const state = {
   loadFamilies: null,
   geometry: null,
   trainPositions: null,
+  // ── persistence-tracking fields ─────────────────────────────────────────
+  dirty: false,
+  lastSavedAt: null,
+  loadedFromStorage: false,
+  persistenceMessage: null,
+  // ────────────────────────────────────────────────────────────────────────
   groupedCases: [],
   groupingResult: null,
   groupedCaseValidation: { valid: false, errors: ["Grouped cases have not been generated yet."] },
