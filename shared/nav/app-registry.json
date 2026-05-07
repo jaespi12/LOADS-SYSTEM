@@ -1,1 +1,33 @@
-
+{
+  "defaultRoute": "#/home",
+  "groups": [
+    {
+      "id": "overview",
+      "label": "Overview",
+      "items": [
+        { "id": "home", "label": "Project Package", "route": "#/home" }
+      ]
+    },
+    {
+      "id": "inputs",
+      "label": "Inputs",
+      "items": [
+        { "id": "design-basis", "label": "Design Basis", "route": "#/design-basis" },
+        { "id": "geometry", "label": "Geometry", "route": "#/geometry" },
+        { "id": "train", "label": "Train", "route": "#/train" },
+        { "id": "kinematics", "label": "Kinematics", "route": "#/kinematics" },
+        { "id": "load-families", "label": "Load Families", "route": "#/load-families" },
+        { "id": "train-positions", "label": "Train Positions", "route": "#/train-positions" }
+      ]
+    },
+    {
+      "id": "outputs",
+      "label": "Outputs",
+      "items": [
+        { "id": "audit", "label": "Audit", "route": "#/audit", "status": "planned" },
+        { "id": "envelopes", "label": "Envelopes", "route": "#/envelopes", "status": "planned" },
+        { "id": "export", "label": "Export", "route": "#/export", "status": "planned" }
+      ]
+    }
+  ]
+}

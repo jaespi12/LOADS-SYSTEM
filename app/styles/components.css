@@ -47,6 +47,10 @@
   color: #f97316;
 }
 
+.status-planned {
+  color: var(--muted);
+}
+
 .error-list {
   margin: 0;
   padding-left: 1.1rem;
@@ -85,4 +89,121 @@
 
 .panel-train-position {
   border-left: 3px solid #fb7185;
+}
+
+.panel-geometry {
+  border-left: 3px solid #60a5fa;
+}
+
+.panel-audit {
+  border-left: 3px solid #c084fc;
+}
+
+.panel-envelopes {
+  border-left: 3px solid #f472b6;
+}
+
+.panel-export {
+  border-left: 3px solid #facc15;
+}
+
+/* Sidebar navigation */
+.app-sidebar {
+  background: var(--panel);
+  border: 1px solid #1f2937;
+  border-radius: 8px;
+  padding: 0.85rem 0.65rem;
+  position: sticky;
+  top: 0.75rem;
+  align-self: start;
+}
+
+.nav-project {
+  padding: 0.4rem 0.6rem 0.85rem;
+  border-bottom: 1px solid #1f2937;
+  margin-bottom: 0.6rem;
+}
+
+.nav-project-label {
+  color: var(--muted);
+  font-size: 0.65rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.nav-project-name {
+  font-weight: 600;
+  font-size: 0.95rem;
+  margin-top: 0.1rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.nav-project-id {
+  color: var(--muted);
+  font-size: 0.75rem;
+  font-family: ui-monospace, "SFMono-Regular", Menlo, monospace;
+}
+
+.nav-group + .nav-group {
+  margin-top: 0.85rem;
+}
+
+.nav-group-label {
+  color: var(--muted);
+  font-size: 0.65rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  padding: 0 0.6rem;
+  margin-bottom: 0.3rem;
+}
+
+.nav-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.nav-link {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--text);
+  text-decoration: none;
+  padding: 0.45rem 0.6rem;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  border: 1px solid transparent;
+}
+
+.nav-link:hover {
+  background: #1f2937;
+}
+
+.nav-link:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+
+.nav-link.is-active {
+  background: rgba(56, 189, 248, 0.12);
+  color: var(--accent);
+  font-weight: 600;
+  border-color: rgba(56, 189, 248, 0.35);
+}
+
+.nav-link.is-planned {
+  color: var(--muted);
+}
+
+.nav-tag {
+  font-size: 0.6rem;
+  color: var(--muted);
+  background: #1f2937;
+  padding: 0.1rem 0.4rem;
+  border-radius: 999px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
 }

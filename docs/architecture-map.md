@@ -68,19 +68,23 @@ Current key files:
   - Minimal in-memory state container with `getState`, `setState`, and `subscribe`.
 - `app.js`
   - Startup lifecycle:
-    1. Render loading state.
-    2. Fetch lookup files via configured paths.
-    3. Commit lookups into shared store.
-    4. Re-render success state or startup error panel.
+    1. Render loading state with sidebar shell.
+    2. Load nav registry from `shared/nav/app-registry.json`.
+    3. Fetch lookup, schema, and example fixture files in parallel.
+    4. Validate fixtures against schemas and run cross-contract readiness checks.
+    5. Commit results into the shared store.
+    6. Resolve current route from `window.location.hash` and render the matching view.
+    7. React to `hashchange` events to switch the active view without reloading data.
 
-Other present-but-not-wired modules:
-- `components/`
-- `views/`
-- `engines/`
-- `export/`
-- `utils/`
+Currently wired modules:
+- `components/sidebar.js` — primary navigation rail.
+- `views/` — home, design-basis, geometry, train, kinematics, load-generator, case-grouping, audit, envelopes, export.
+- `utils/validation.js` — schema and cross-contract validators.
 
-These indicate planned modular growth but are not yet integrated by `app.js`.
+Present-but-not-wired modules (intentional, gated to later phases):
+- `engines/*` — domain engines; remain empty until formula approval per `AGENTS.md`.
+- `export/risa-export.js` — export adapter wiring deferred to Outputs phase.
+- Most `components/*` (command-bar, data-grid, filter-panel, etc.) — deferred to editing milestone.
 
 ## 4) `app/styles/` and `shared/styles/` (presentation layers)
 
@@ -114,12 +118,13 @@ Runtime role today:
 
 1. Browser loads `index.html`.
 2. CSS layers are loaded (`shared/styles/*` then `app/styles/*`).
-3. `app/scripts/app.js` starts.
-4. `app.js` reads file paths from `APP_CONFIG` (`config.js`).
-5. `bootstrap()` fetches all files in `shared/data/` listed in config.
-6. Results are written to centralized in-memory `state.lookups` via `setState()`.
-7. `subscribe(render)` triggers UI update to show loaded datasets.
-8. If any fetch fails, error state is rendered.
+3. `app/scripts/app.js` starts and renders the sidebar shell + loading state.
+4. `bootstrap()` loads the nav registry, then in parallel reads `APP_CONFIG.dataPaths`, schema files, and example fixtures.
+5. Each fixture is validated against its schema; `validateGroupedCaseReadiness` runs across train/geometry/train-positions.
+6. Results (lookups, fixtures, validation, navRegistry, route) are committed to the store via `setState()`.
+7. `subscribe(render)` re-renders. The active view is selected by `state.route` (hash-based).
+8. `hashchange` events update `state.route` so the view swaps without re-fetching data.
+9. If any fetch fails, a startup error card is rendered inside the content column.
 
 ## Expected end-to-end data flow (target based on existing structure)
 
