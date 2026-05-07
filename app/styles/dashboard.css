@@ -1,8 +1,24 @@
+/* Override layout.css centering — full-viewport workspace shell */
+.app-header,
+.app-main {
+  width: 100%;
+  max-width: none;
+  margin: 0;
+  box-sizing: border-box;
+}
+
+.app-header {
+  border-bottom: 1px solid #1f2937;
+  padding: 0.7rem 2.5rem;
+}
+
 .app-main {
   display: grid;
-  grid-template-columns: 240px minmax(0, 1fr);
-  gap: 1.25rem;
+  grid-template-columns: 280px minmax(0, 1fr);
+  gap: 1.5rem;
   align-items: start;
+  padding: 1.5rem 2.5rem 2rem;
+  min-height: calc(100vh - 3.25rem);
 }
 
 .app-content {
@@ -14,5 +30,6 @@
 @media (max-width: 800px) {
   .app-main {
     grid-template-columns: 1fr;
+    padding: 1rem;
   }
 }
