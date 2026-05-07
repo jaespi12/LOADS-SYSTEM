@@ -1,0 +1,98 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "envelope-result.schema.json",
+  "title": "Envelope Result",
+  "description": "Shape-only contract for max/min envelopes computed across grouped-case wheel-load results. Numeric fields are nullable until envelope math is approved per AGENTS.md.",
+  "type": "object",
+  "required": [
+    "envelopeId",
+    "computationContext",
+    "stationStations",
+    "components",
+    "readiness"
+  ],
+  "properties": {
+    "envelopeId": { "type": "string", "minLength": 1 },
+    "description": { "type": "string" },
+    "computationContext": {
+      "type": "object",
+      "required": ["codeSetId", "designBasisId", "formulaScopeId", "computationStatus"],
+      "properties": {
+        "codeSetId": { "type": "string", "minLength": 1 },
+        "designBasisId": { "type": "string", "minLength": 1 },
+        "formulaScopeId": { "type": "string", "minLength": 1 },
+        "formulaRevision": { "type": "string" },
+        "unitSystemId": { "type": "string" },
+        "computationStatus": {
+          "type": "string",
+          "enum": ["PENDING_APPROVAL", "APPROVED", "DEPRECATED"]
+        }
+      },
+      "additionalProperties": false
+    },
+    "sourceWheelLoadResultIds": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "sourceGroupedCaseIds": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "stationStations": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "type": "number" }
+    },
+    "components": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["componentId", "channel", "stations"],
+        "properties": {
+          "componentId": { "type": "string", "minLength": 1 },
+          "channel": {
+            "type": "string",
+            "enum": [
+              "FORCE_VERTICAL",
+              "FORCE_LATERAL",
+              "FORCE_LONGITUDINAL",
+              "MOMENT_ROLLING",
+              "MOMENT_PITCHING",
+              "MOMENT_YAWING"
+            ]
+          },
+          "stations": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "object",
+              "required": ["station", "max", "min"],
+              "properties": {
+                "station": { "type": "number" },
+                "max": { "type": ["number", "null"] },
+                "min": { "type": ["number", "null"] },
+                "absMax": { "type": ["number", "null"] },
+                "maxSourceResultId": { "type": "string" },
+                "minSourceResultId": { "type": "string" }
+              },
+              "additionalProperties": false
+            }
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "readiness": {
+      "type": "object",
+      "required": ["status", "blockingIssues", "warnings"],
+      "properties": {
+        "status": { "type": "string", "enum": ["READY", "BLOCKED", "PENDING_APPROVAL"] },
+        "blockingIssues": { "type": "array", "items": { "type": "string" } },
+        "warnings": { "type": "array", "items": { "type": "string" } }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

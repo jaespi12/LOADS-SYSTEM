@@ -1,0 +1,139 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "wheel-load-result.schema.json",
+  "title": "Wheel-Load Result",
+  "description": "Per-grouped-case, per-axle wheel-load result envelope. Defines the canonical computation boundary. Numeric force/moment fields are nullable and remain null until the formula scope is approved per AGENTS.md.",
+  "type": "object",
+  "required": [
+    "resultId",
+    "groupedCaseId",
+    "computationContext",
+    "axleResults",
+    "readiness"
+  ],
+  "properties": {
+    "resultId": { "type": "string", "minLength": 1 },
+    "groupedCaseId": { "type": "string", "minLength": 1 },
+    "trainId": { "type": "string" },
+    "positionProfileId": { "type": "string" },
+    "computationContext": {
+      "type": "object",
+      "required": ["codeSetId", "designBasisId", "formulaScopeId", "computationStatus"],
+      "properties": {
+        "codeSetId": { "type": "string", "minLength": 1 },
+        "designBasisId": { "type": "string", "minLength": 1 },
+        "formulaScopeId": { "type": "string", "minLength": 1 },
+        "formulaRevision": { "type": "string" },
+        "unitSystemId": { "type": "string" },
+        "computationStatus": {
+          "type": "string",
+          "enum": ["PENDING_APPROVAL", "APPROVED", "DEPRECATED"]
+        },
+        "computationNotes": { "type": "string" }
+      },
+      "additionalProperties": false
+    },
+    "axleResults": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": [
+          "axleResultId",
+          "sourceSectionId",
+          "axleIndex",
+          "sourcePositionId",
+          "stationAtAxle",
+          "localAxes",
+          "forces",
+          "moments"
+        ],
+        "properties": {
+          "axleResultId": { "type": "string", "minLength": 1 },
+          "sourceSectionId": { "type": "string", "minLength": 1 },
+          "axleIndex": { "type": "integer", "minimum": 0 },
+          "sourcePositionId": { "type": "string", "minLength": 1 },
+          "stationAtAxle": { "type": "number" },
+          "wheelPair": {
+            "type": "object",
+            "properties": {
+              "leftWheelId": { "type": "string" },
+              "rightWheelId": { "type": "string" },
+              "gauge": { "type": "number" }
+            },
+            "additionalProperties": false
+          },
+          "localAxes": {
+            "type": "object",
+            "required": ["longitudinal", "lateral", "vertical"],
+            "properties": {
+              "longitudinal": { "type": "string", "enum": ["X", "Y", "Z"] },
+              "lateral": { "type": "string", "enum": ["X", "Y", "Z"] },
+              "vertical": { "type": "string", "enum": ["X", "Y", "Z"] }
+            },
+            "additionalProperties": false
+          },
+          "forces": {
+            "type": "object",
+            "required": ["vertical", "lateral", "longitudinal"],
+            "properties": {
+              "vertical": { "type": ["number", "null"] },
+              "lateral": { "type": ["number", "null"] },
+              "longitudinal": { "type": ["number", "null"] }
+            },
+            "additionalProperties": false
+          },
+          "moments": {
+            "type": "object",
+            "required": ["rolling", "pitching", "yawing"],
+            "properties": {
+              "rolling": { "type": ["number", "null"] },
+              "pitching": { "type": ["number", "null"] },
+              "yawing": { "type": ["number", "null"] }
+            },
+            "additionalProperties": false
+          },
+          "contributions": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": ["loadFamilyId", "vertical", "lateral", "longitudinal"],
+              "properties": {
+                "loadFamilyId": { "type": "string", "minLength": 1 },
+                "vertical": { "type": ["number", "null"] },
+                "lateral": { "type": ["number", "null"] },
+                "longitudinal": { "type": ["number", "null"] },
+                "notes": { "type": "string" }
+              },
+              "additionalProperties": false
+            }
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "envelopeRefs": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["envelopeId", "role"],
+        "properties": {
+          "envelopeId": { "type": "string", "minLength": 1 },
+          "role": { "type": "string", "enum": ["MAX", "MIN", "ABS_MAX"] }
+        },
+        "additionalProperties": false
+      }
+    },
+    "readiness": {
+      "type": "object",
+      "required": ["status", "blockingIssues", "warnings"],
+      "properties": {
+        "status": { "type": "string", "enum": ["READY", "BLOCKED", "PENDING_APPROVAL"] },
+        "blockingIssues": { "type": "array", "items": { "type": "string" } },
+        "warnings": { "type": "array", "items": { "type": "string" } }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

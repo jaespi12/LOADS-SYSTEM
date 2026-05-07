@@ -1,0 +1,68 @@
+{
+  "resultId": "WL-GC-TP-ARC-001-STEP_WINDOW-001",
+  "groupedCaseId": "GC-TP-ARC-001-STEP_WINDOW-001",
+  "trainId": "TRN-001",
+  "positionProfileId": "TP-ARC-001",
+  "computationContext": {
+    "codeSetId": "ASCE-SEI-7-22",
+    "designBasisId": "DB-001",
+    "formulaScopeId": "WHEEL_LOAD_V0",
+    "formulaRevision": "R0",
+    "unitSystemId": "US_CUSTOMARY",
+    "computationStatus": "PENDING_APPROVAL",
+    "computationNotes": "Example fixture aligned to the wheel-load contract. Numeric fields remain null until WHEEL_LOAD_V0 is approved."
+  },
+  "axleResults": [
+    {
+      "axleResultId": "WL-GC-TP-ARC-001-STEP_WINDOW-001-SEC-LEAD-A0",
+      "sourceSectionId": "SEC-LEAD",
+      "axleIndex": 0,
+      "sourcePositionId": "P-000",
+      "stationAtAxle": 8,
+      "wheelPair": {
+        "leftWheelId": "L",
+        "rightWheelId": "R"
+      },
+      "localAxes": {
+        "longitudinal": "X",
+        "lateral": "Y",
+        "vertical": "Z"
+      },
+      "forces": {
+        "vertical": null,
+        "lateral": null,
+        "longitudinal": null
+      },
+      "moments": {
+        "rolling": null,
+        "pitching": null,
+        "yawing": null
+      },
+      "contributions": [
+        { "loadFamilyId": "DEAD", "vertical": null, "lateral": null, "longitudinal": null },
+        { "loadFamilyId": "LIVE", "vertical": null, "lateral": null, "longitudinal": null },
+        { "loadFamilyId": "SEISMIC", "vertical": null, "lateral": null, "longitudinal": null }
+      ]
+    },
+    {
+      "axleResultId": "WL-GC-TP-ARC-001-STEP_WINDOW-001-SEC-LEAD-A1",
+      "sourceSectionId": "SEC-LEAD",
+      "axleIndex": 1,
+      "sourcePositionId": "P-000",
+      "stationAtAxle": 22,
+      "localAxes": {
+        "longitudinal": "X",
+        "lateral": "Y",
+        "vertical": "Z"
+      },
+      "forces": { "vertical": null, "lateral": null, "longitudinal": null },
+      "moments": { "rolling": null, "pitching": null, "yawing": null }
+    }
+  ],
+  "envelopeRefs": [],
+  "readiness": {
+    "status": "PENDING_APPROVAL",
+    "blockingIssues": [],
+    "warnings": ["Wheel-load formula scope WHEEL_LOAD_V0 awaits approval; numeric outputs are null by contract."]
+  }
+}

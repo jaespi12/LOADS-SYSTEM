@@ -39,16 +39,40 @@ Progress from package completeness to grouped-case-ready inputs to deterministic
 - No overlap/stride options on `STEP_WINDOW` (non-overlapping only).
 - Stub views for Audit, Envelopes, and Export remain "Planned".
 
-## Phase 4 — Math Enablement (gated, not started)
-Enable grouped-case math only when readiness and contract guardrails remain consistently green and the formula scope is explicitly approved per `AGENTS.md`.
+## Phase 4 — Math Enablement (gated, contract boundary defined)
 
-### Gaps to close before wheel-load logic
-1. Approved formula list anchored to a code-set edition from `shared/data/code-sets.json`.
-2. Wheel-load distribution contract: per-axle and per-grouped-case load assignment shape.
-3. Load-family contribution mapping: how `DEAD`, `LIVE`, `SEISMIC`, etc. attach to grouped cases.
-4. Envelope output contract for max/min results across grouped cases per station.
-5. Audit log contract for orchestration + computation runs.
-6. Persistence story (local snapshot vs. session-only) for grouped-case results.
+### Phase 4a — Computation Boundary Contracts (completed)
+- `shared/schemas/wheel-load-result.schema.json` defines the per-grouped-case, per-axle output envelope. Numeric force/moment fields are nullable; `computationContext.computationStatus` enumerates `PENDING_APPROVAL | APPROVED | DEPRECATED`.
+- `shared/schemas/envelope-result.schema.json` defines the per-station max/min envelope shape across grouped-case wheel-load results.
+- `shared/data/code-sets.json` carries a `formulaScopes[]` registry with `WHEEL_LOAD_V0` and `ENVELOPE_V0` both at `PENDING_APPROVAL` and empty `approvedCodeIds`.
+- `app/data/example-wheel-load-result.json` is a schema-conformant fixture with all numerics `null`.
+- `app/scripts/utils/validation.js` extended to recurse into nested objects, validate union types (`["number", "null"]`), integers, booleans, and primitive array items — required for the new schemas to be enforceable.
+- `app/tests/wheel-load-contract.test.js` asserts schema conformance, computation-status gating, formula-scope registration, and rejection of out-of-spec values.
+- `docs/design-basis.md` documents inputs/outputs, candidate codes, and the approval workflow.
+
+### Phase 4a — Intentional placeholders
+- No engine module emits wheel-load values yet (`app/scripts/engines/wheel-load-engine.js` remains a stub).
+- No UI surface for wheel-load results yet.
+- No persistence; results are contract-only.
+- No audit log; only the wheel-load `readiness` field is in scope.
+- No user-driven formula-scope selection.
+
+### Phase 4b — Math Enablement (not started; gated)
+A `formulaScope` may only be promoted to `APPROVED` after **all four** of:
+1. Code-section-anchored formula list recorded in `docs/load-methodology.md`.
+2. Reviewer sign-off in `docs/change-management.md`.
+3. `AGENTS.md` updated to reflect the new approved scope.
+4. `approvedCodeIds` populated in `shared/data/code-sets.json` for that scope.
+
+### Remaining gaps before wheel-load math
+1. Approved formula list anchored to `ASCE-SEI-7-22` and/or `ASTM-F2291-25C` sections.
+2. Sign-convention authority document anchored to the schema's `localAxes`.
+3. Unit-system reconciliation policy for cross-unit fixtures.
+4. Resolution policy when `groupedCaseReadiness` is `BLOCKED` (skip vs. emit `BLOCKED` wheel-load result).
+5. Engine implementation in `app/scripts/engines/wheel-load-engine.js` once a scope is `APPROVED`.
+6. UI surface (Outputs → Wheel Load) when results carry non-null values.
+7. Audit log contract for orchestration + computation runs.
+8. Persistence story (local snapshot vs. session-only) for wheel-load and envelope results.
 
 ## Workflow per AGENTS.md Implementation Order
 1. Update shared contract source (`shared/data`, `shared/schemas`).

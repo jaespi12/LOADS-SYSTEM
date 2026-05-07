@@ -1,5 +1,23 @@
+function matchesPrimitiveType(type, value) {
+  if (type === "null") return value === null;
+  if (type === "string") return typeof value === "string";
+  if (type === "number") return typeof value === "number";
+  if (type === "integer") return Number.isInteger(value);
+  if (type === "boolean") return typeof value === "boolean";
+  return false;
+}
+
 function validateByRule(rule, value, fieldPath) {
   const errors = [];
+
+  if (Array.isArray(rule.type)) {
+    const ok = rule.type.some((t) => matchesPrimitiveType(t, value));
+    if (!ok) return [`${fieldPath}: must be one of types [${rule.type.join(", ")}]`];
+    if (Array.isArray(rule.enum) && !rule.enum.includes(value)) {
+      errors.push(`${fieldPath}: must be one of [${rule.enum.join(", ")}]`);
+    }
+    return errors;
+  }
 
   if (rule.type === "string") {
     if (typeof value !== "string") return [`${fieldPath}: must be type string`];
@@ -10,6 +28,17 @@ function validateByRule(rule, value, fieldPath) {
 
   if (rule.type === "number" && typeof value !== "number") {
     return [`${fieldPath}: must be type number`];
+  }
+
+  if (rule.type === "integer") {
+    if (!Number.isInteger(value)) return [`${fieldPath}: must be type integer`];
+    if (typeof rule.minimum === "number" && value < rule.minimum) {
+      errors.push(`${fieldPath}: must be >= ${rule.minimum}`);
+    }
+  }
+
+  if (rule.type === "boolean" && typeof value !== "boolean") {
+    return [`${fieldPath}: must be type boolean`];
   }
 
   if (Array.isArray(rule.enum) && !rule.enum.includes(value)) {
@@ -51,7 +80,18 @@ function validateObject(schema, candidate, pathPrefix = "") {
       }
       if (rule.items?.type === "object") {
         value.forEach((item, index) => errors.push(...validateObject(rule.items, item, `${fieldPath}[${index}].`)));
+      } else if (rule.items) {
+        value.forEach((item, index) => errors.push(...validateByRule(rule.items, item, `${fieldPath}[${index}]`)));
       }
+      return;
+    }
+
+    if (rule.type === "object") {
+      if (value === null || typeof value !== "object" || Array.isArray(value)) {
+        errors.push(`${fieldPath}: must be type object`);
+        return;
+      }
+      errors.push(...validateObject(rule, value, `${fieldPath}.`));
       return;
     }
 

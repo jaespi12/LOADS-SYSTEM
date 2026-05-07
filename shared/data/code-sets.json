@@ -25,5 +25,33 @@
       "label": "ASTM F2291-25c Standard Practice for Design of Amusement Rides and Devices",
       "discipline": "Ride Systems"
     }
+  ],
+  "formulaScopes": [
+    {
+      "id": "WHEEL_LOAD_V0",
+      "title": "Wheel-Load Computation Boundary",
+      "status": "PENDING_APPROVAL",
+      "candidateCodeIds": ["ASCE-SEI-7-22", "ASTM-F2291-25C"],
+      "approvedCodeIds": [],
+      "consumes": [
+        "groupedCases",
+        "geometry.stations",
+        "train.sections.axles",
+        "kinematics.entries",
+        "loadFamilies.families"
+      ],
+      "produces": ["wheel-load-result.schema.json"],
+      "notes": "Formula list is intentionally not enumerated here. Schema and contract land first; equations are gated behind explicit approval per AGENTS.md."
+    },
+    {
+      "id": "ENVELOPE_V0",
+      "title": "Envelope Aggregation Boundary",
+      "status": "PENDING_APPROVAL",
+      "candidateCodeIds": ["ASCE-SEI-7-22"],
+      "approvedCodeIds": [],
+      "consumes": ["wheel-load-result.schema.json"],
+      "produces": ["envelope-result.schema.json"],
+      "notes": "Envelope shape is defined; aggregation rules and absolute-max conventions are gated behind explicit approval."
+    }
   ]
 }
