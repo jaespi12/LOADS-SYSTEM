@@ -498,17 +498,146 @@
 /* ── Project controls (header bar) ────────────────────────────────────────── */
 .project-controls {
   display: flex;
-  align-items: center;
-  gap: 0.65rem;
-  flex-wrap: wrap;
+  flex-direction: column;
+  gap: 0.4rem;
   margin-left: auto;
   margin-right: 0.85rem;
+  position: relative;
+  align-items: flex-end;
+}
+
+.project-controls-primary {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  flex-wrap: wrap;
+}
+
+.project-name-btn {
+  background: #1f2937;
+  border-color: #374151;
+  color: var(--text);
+  font-weight: 600;
+  max-width: 220px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.project-name-btn:hover {
+  background: #374151;
+}
+
+.picker-caret {
+  font-size: 0.7rem;
+  color: var(--muted);
+  flex-shrink: 0;
 }
 
 .project-controls-buttons {
   display: flex;
   gap: 0.4rem;
   align-items: center;
+  flex-wrap: wrap;
+}
+
+/* ── Project picker dropdown ──────────────────────────────────────────────── */
+.project-picker {
+  position: absolute;
+  top: calc(100% + 4px);
+  right: 0;
+  z-index: 200;
+  background: #1a2332;
+  border: 1px solid #374151;
+  border-radius: 8px;
+  min-width: 320px;
+  max-width: 440px;
+  max-height: 320px;
+  overflow-y: auto;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+}
+
+.project-picker-empty {
+  padding: 0.85rem 1rem;
+  font-size: 0.85rem;
+}
+
+.project-picker-list {
+  padding: 0.3rem;
+}
+
+.project-picker-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0.5rem 0.65rem;
+  border-radius: 5px;
+  border: 1px solid transparent;
+}
+
+.project-picker-row:hover {
+  background: #1f2937;
+}
+
+.project-picker-row.is-active {
+  border-color: rgba(56, 189, 248, 0.35);
+  background: rgba(56, 189, 248, 0.07);
+}
+
+.project-picker-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  min-width: 0;
+  flex: 1;
+  overflow: hidden;
+}
+
+.project-picker-name {
+  font-weight: 600;
+  font-size: 0.88rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.project-picker-date {
+  font-size: 0.72rem;
+}
+
+.project-picker-actions {
+  display: flex;
+  gap: 0.3rem;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+/* ── Inline dialog ────────────────────────────────────────────────────────── */
+.dialog-inline {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  background: #1a2332;
+  border: 1px solid rgba(56, 189, 248, 0.4);
+  border-radius: 6px;
+  padding: 0.4rem 0.65rem;
+  flex-wrap: wrap;
+}
+
+.dialog-label {
+  font-size: 0.82rem;
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+.dialog-name-input {
+  min-width: 160px;
+  flex: 1;
+  padding: 0.25rem 0.5rem;
 }
 
 .import-label {

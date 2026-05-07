@@ -74,22 +74,32 @@ A `formulaScope` may only be promoted to `APPROVED` after **all four** of:
 7. Audit log contract for orchestration + computation runs.
 8. Persistence story (local snapshot vs. session-only) for wheel-load and envelope results.
 
-### Persistence Milestone (in place)
-The app persists user edits to `window.localStorage` (key `LOADS_SYSTEM_PROJECT_v1`) and supports explicit Save / Reload / Reset, plus JSON Export / Import. See `docs/data-model.md#project-package-persistence-format` for the package shape.
+### Persistence Milestone — v1: single slot (superseded)
+Replaced by multi-project workflow below.
+
+### Persistence Milestone — v2: multi-project workflow (in place)
+Stores multiple named projects. Storage layout and package format documented in `docs/data-model.md#multi-project-storage-layout`.
 
 | Capability | Status |
 | --- | --- |
 | Dirty-state tracking on every mutation | Done |
-| Debounced autosave (1.5 s after last edit) | Done |
-| Explicit Save / Reload / Reset buttons | Done |
-| Export / Import full project package as JSON | Done |
-| Bootstrap auto-applies last saved package on page load | Done |
-| Multi-project storage (named slots) | Deferred |
+| Debounced autosave (1.5 s) to current project's slot | Done |
+| beforeunload warning when dirty | Done |
+| New Project (from bundled fixtures) | Done |
+| Save (explicit, current slot) | Done |
+| Save As (copy to new slot) | Done |
+| Open (project picker dropdown) | Done |
+| Duplicate project | Done |
+| Delete project (with confirm dialog) | Done |
+| Export project package as JSON | Done |
+| Import JSON → unsaved active project (must Save to persist) | Done |
+| Legacy single-slot migration on first boot | Done |
+| Bootstrap restores last active project on page load | Done |
 | Cross-tab synchronization via `storage` events | Deferred |
-| Schema-package migrations (e.g. v1 → v2) | Stub only — `applyProjectPackage` rejects unknown versions; no migration path yet |
-| Server-side persistence | Out of scope (no backend per AGENTS.md) |
+| Schema-package migrations (v1 → v2) | Stub — rejects unknown schemaVersion, no migration path yet |
 | Undo / redo history | Deferred |
-| Snapshot of computed wheel-load and envelope outputs | Deferred (gated on math approval) |
+| Server-side persistence | Out of scope (no backend per AGENTS.md) |
+| Snapshot of computed outputs (wheel-load / envelope) | Deferred (gated on math approval) |
 
 ## Workflow per AGENTS.md Implementation Order
 1. Update shared contract source (`shared/data`, `shared/schemas`).

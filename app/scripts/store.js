@@ -14,6 +14,11 @@ const state = {
   lastSavedAt: null,
   loadedFromStorage: false,
   persistenceMessage: null,
+  // ── multi-project fields ─────────────────────────────────────────────────
+  currentProjectId: null,
+  projectsIndex: [],          // [{ id, name, createdAt, savedAt }]
+  projectPickerOpen: false,
+  pendingDialog: null,        // { type: 'new-project' | 'save-as' } | null
   // ────────────────────────────────────────────────────────────────────────
   groupedCases: [],
   groupingResult: null,

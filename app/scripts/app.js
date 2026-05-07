@@ -19,9 +19,16 @@ import { renderProjectControls } from "./components/project-controls.js";
 import {
   buildProjectPackage,
   applyProjectPackage,
-  saveToStorage,
-  loadFromStorage,
-  clearStorage,
+  generateProjectId,
+  loadProjectsIndex,
+  saveProjectsIndex,
+  saveProjectToSlot,
+  loadProjectFromSlot,
+  deleteProjectSlot,
+  addToIndex,
+  updateIndexEntry,
+  removeFromIndex,
+  migrateFromLegacySlot,
   downloadAsJson,
   readJsonFile
 } from "./utils/persistence.js";
@@ -62,19 +69,28 @@ function scheduleAutosave() {
   autosaveTimer = setTimeout(() => {
     autosaveTimer = null;
     const st = getState();
-    if (!st.dirty) return;
+    if (!st.dirty || !st.currentProjectId) return;
     const pkg = buildProjectPackage(st);
-    const result = saveToStorage(pkg);
-    if (result.ok) {
-      setState({ dirty: false, lastSavedAt: pkg.savedAt, persistenceMessage: { kind: "info", text: "Autosaved." } });
-      setTimeout(() => {
-        if (getState().persistenceMessage?.text === "Autosaved.") {
-          setState({ persistenceMessage: null });
-        }
-      }, 2000);
-    } else {
-      setState({ persistenceMessage: { kind: "error", text: `Autosave failed: ${result.error}` } });
+    const slotResult = saveProjectToSlot(st.currentProjectId, pkg);
+    if (!slotResult.ok) {
+      setState({ persistenceMessage: { kind: "error", text: `Autosave failed: ${slotResult.error}` } });
+      return;
     }
+    const updatedIndex = updateIndexEntry(
+      { projects: st.projectsIndex, activeProjectId: st.currentProjectId },
+      st.currentProjectId,
+      { savedAt: pkg.savedAt }
+    );
+    saveProjectsIndex(updatedIndex);
+    setState({
+      dirty: false,
+      lastSavedAt: pkg.savedAt,
+      projectsIndex: updatedIndex.projects,
+      persistenceMessage: { kind: "info", text: "Autosaved." }
+    });
+    setTimeout(() => {
+      if (getState().persistenceMessage?.text === "Autosaved.") setState({ persistenceMessage: null });
+    }, 2000);
   }, AUTOSAVE_DELAY_MS);
 }
 
@@ -344,71 +360,256 @@ function handleAction(action, target) {
     // ── Persistence actions ──────────────────────────────────────────────
 
     case "save-project": {
+      if (!state.currentProjectId) {
+        // No slot yet — create one now
+        handleAction("new-project-start", target);
+        break;
+      }
       const pkg = buildProjectPackage(state);
-      const result = saveToStorage(pkg);
-      if (result.ok) {
-        setState({ dirty: false, lastSavedAt: pkg.savedAt, persistenceMessage: { kind: "info", text: "Saved." } });
-      } else {
-        setState({ persistenceMessage: { kind: "error", text: `Save failed: ${result.error}` } });
+      const slotResult = saveProjectToSlot(state.currentProjectId, pkg);
+      if (!slotResult.ok) {
+        setState({ persistenceMessage: { kind: "error", text: `Save failed: ${slotResult.error}` } });
+        break;
       }
+      const updatedIdx = updateIndexEntry(
+        { projects: state.projectsIndex, activeProjectId: state.currentProjectId },
+        state.currentProjectId,
+        { savedAt: pkg.savedAt }
+      );
+      saveProjectsIndex(updatedIdx);
+      setState({ dirty: false, lastSavedAt: pkg.savedAt, projectsIndex: updatedIdx.projects, persistenceMessage: { kind: "info", text: "Saved." } });
       break;
     }
 
-    case "reload-project": {
-      const result = loadFromStorage();
-      if (!result.ok) {
-        setState({ persistenceMessage: { kind: "error", text: `Reload failed: ${result.error}` } });
-        break;
-      }
-      if (!result.present) {
-        setState({ persistenceMessage: { kind: "warn", text: "No saved project in storage." } });
-        break;
-      }
-      try {
-        const patch = applyProjectPackage(result.package);
-        const merged = { ...state, ...patch };
-        const recomputed = recomputeAllValidation(merged);
-        setState({
-          ...patch,
-          ...recomputed,
-          dirty: false,
-          loadedFromStorage: true,
-          lastSavedAt: result.package.savedAt ?? null,
-          persistenceMessage: { kind: "info", text: "Reloaded from storage." }
-        });
-      } catch (err) {
-        setState({ persistenceMessage: { kind: "error", text: `Reload failed: ${err.message}` } });
-      }
+    case "toggle-project-picker": {
+      setState({ projectPickerOpen: !state.projectPickerOpen, pendingDialog: null });
       break;
     }
 
-    case "reset-project": {
-      clearStorage();
+    case "new-project-start": {
+      setState({ pendingDialog: { type: "new-project" }, projectPickerOpen: false });
+      break;
+    }
+
+    case "new-project-confirm": {
+      const name = document.querySelector("#dialog-project-name")?.value?.trim() || "New Project";
+      const id = generateProjectId();
+      const now = new Date().toISOString();
+      const newProject = {
+        ...JSON.parse(JSON.stringify(fixtureSnapshots.project)),
+        name,
+        projectId: id
+      };
+      const newDesignBasis = { ...JSON.parse(JSON.stringify(fixtureSnapshots.designBasis)), name };
       const merged = {
         ...state,
-        project: fixtureSnapshots.project,
-        designBasis: fixtureSnapshots.designBasis,
-        geometry: fixtureSnapshots.geometry,
-        train: fixtureSnapshots.train,
-        kinematics: fixtureSnapshots.kinematics,
-        loadFamilies: fixtureSnapshots.loadFamilies,
-        trainPositions: fixtureSnapshots.trainPositions
+        project: newProject,
+        designBasis: newDesignBasis,
+        geometry: JSON.parse(JSON.stringify(fixtureSnapshots.geometry)),
+        train: JSON.parse(JSON.stringify(fixtureSnapshots.train)),
+        kinematics: JSON.parse(JSON.stringify(fixtureSnapshots.kinematics)),
+        loadFamilies: JSON.parse(JSON.stringify(fixtureSnapshots.loadFamilies)),
+        trainPositions: JSON.parse(JSON.stringify(fixtureSnapshots.trainPositions))
       };
       const recomputed = recomputeAllValidation(merged);
+      const pkg = buildProjectPackage(merged);
+      pkg.project = newProject;
+      pkg.designBasis = newDesignBasis;
+      const entry = { id, name, createdAt: now, savedAt: now };
+      const currentIndex = { projects: state.projectsIndex, activeProjectId: id };
+      const newIndex = addToIndex(currentIndex, entry);
+      newIndex.activeProjectId = id;
+      saveProjectToSlot(id, pkg);
+      saveProjectsIndex(newIndex);
       setState({
-        project: merged.project,
-        designBasis: merged.designBasis,
+        project: newProject,
+        designBasis: newDesignBasis,
         geometry: merged.geometry,
         train: merged.train,
         kinematics: merged.kinematics,
         loadFamilies: merged.loadFamilies,
         trainPositions: merged.trainPositions,
         ...recomputed,
+        currentProjectId: id,
+        projectsIndex: newIndex.projects,
+        pendingDialog: null,
         dirty: false,
-        loadedFromStorage: false,
-        lastSavedAt: null,
-        persistenceMessage: { kind: "info", text: "Reset to bundled fixtures." }
+        loadedFromStorage: true,
+        lastSavedAt: now,
+        persistenceMessage: { kind: "info", text: `Created "${name}".` }
       });
+      break;
+    }
+
+    case "new-project-cancel": {
+      setState({ pendingDialog: null });
+      break;
+    }
+
+    case "save-as-start": {
+      const defaultName = `${state.project?.name ?? "Project"} Copy`;
+      setState({ pendingDialog: { type: "save-as", defaultName }, projectPickerOpen: false });
+      break;
+    }
+
+    case "save-as-confirm": {
+      const name = document.querySelector("#dialog-project-name")?.value?.trim() || "Project Copy";
+      const id = generateProjectId();
+      const now = new Date().toISOString();
+      const pkg = buildProjectPackage(state);
+      pkg.project = { ...pkg.project, name, projectId: id };
+      pkg.designBasis = pkg.designBasis ? { ...pkg.designBasis, name } : pkg.designBasis;
+      const entry = { id, name, createdAt: now, savedAt: now };
+      const currentIndex = { projects: state.projectsIndex, activeProjectId: id };
+      const newIndex = addToIndex(currentIndex, entry);
+      newIndex.activeProjectId = id;
+      saveProjectToSlot(id, pkg);
+      saveProjectsIndex(newIndex);
+      setState({
+        project: pkg.project,
+        designBasis: pkg.designBasis,
+        currentProjectId: id,
+        projectsIndex: newIndex.projects,
+        pendingDialog: null,
+        dirty: false,
+        loadedFromStorage: true,
+        lastSavedAt: now,
+        persistenceMessage: { kind: "info", text: `Saved as "${name}".` }
+      });
+      break;
+    }
+
+    case "save-as-cancel": {
+      setState({ pendingDialog: null });
+      break;
+    }
+
+    case "select-project": {
+      const id = target.dataset.projectId;
+      if (!id || id === state.currentProjectId) {
+        setState({ projectPickerOpen: false });
+        break;
+      }
+      if (state.dirty) {
+        const ok = window.confirm("You have unsaved changes. Switch project anyway?");
+        if (!ok) { setState({ projectPickerOpen: false }); break; }
+      }
+      const loaded = loadProjectFromSlot(id);
+      if (!loaded.ok || !loaded.present) {
+        setState({ persistenceMessage: { kind: "error", text: `Could not load project ${id}.` }, projectPickerOpen: false });
+        break;
+      }
+      try {
+        const patch = applyProjectPackage(loaded.package);
+        const merged = { ...state, ...patch };
+        const recomputed = recomputeAllValidation(merged);
+        const updatedIdx = { projects: state.projectsIndex, activeProjectId: id };
+        saveProjectsIndex(updatedIdx);
+        setState({
+          ...patch,
+          ...recomputed,
+          currentProjectId: id,
+          projectPickerOpen: false,
+          dirty: false,
+          loadedFromStorage: true,
+          lastSavedAt: loaded.package.savedAt ?? null,
+          persistenceMessage: { kind: "info", text: `Opened "${patch.project?.name ?? id}".` }
+        });
+      } catch (err) {
+        setState({ persistenceMessage: { kind: "error", text: `Open failed: ${err.message}` }, projectPickerOpen: false });
+      }
+      break;
+    }
+
+    case "duplicate-project": {
+      const srcId = target.dataset.projectId;
+      const srcEntry = state.projectsIndex.find((p) => p.id === srcId);
+      const loaded = loadProjectFromSlot(srcId);
+      if (!loaded.ok || !loaded.present) {
+        setState({ persistenceMessage: { kind: "error", text: `Could not read project to duplicate.` } });
+        break;
+      }
+      const newId = generateProjectId();
+      const now = new Date().toISOString();
+      const newName = `${srcEntry?.name ?? "Project"} Copy`;
+      const pkg = { ...loaded.package, savedAt: now };
+      if (pkg.project) pkg.project = { ...pkg.project, name: newName, projectId: newId };
+      if (pkg.designBasis) pkg.designBasis = { ...pkg.designBasis, name: newName };
+      const entry = { id: newId, name: newName, createdAt: now, savedAt: now };
+      const currentIndex = { projects: state.projectsIndex, activeProjectId: state.currentProjectId };
+      const newIndex = addToIndex(currentIndex, entry);
+      saveProjectToSlot(newId, pkg);
+      saveProjectsIndex(newIndex);
+      setState({ projectsIndex: newIndex.projects, persistenceMessage: { kind: "info", text: `Duplicated as "${newName}".` } });
+      break;
+    }
+
+    case "delete-project": {
+      const delId = target.dataset.projectId;
+      const delEntry = state.projectsIndex.find((p) => p.id === delId);
+      const ok = window.confirm(`Delete project "${delEntry?.name ?? delId}"? This cannot be undone.`);
+      if (!ok) break;
+      deleteProjectSlot(delId);
+      const newIndex = removeFromIndex(
+        { projects: state.projectsIndex, activeProjectId: state.currentProjectId },
+        delId
+      );
+      saveProjectsIndex(newIndex);
+      const wasCurrent = delId === state.currentProjectId;
+      if (wasCurrent) {
+        // If there are other projects, open the first one; otherwise fall back to fixtures.
+        if (newIndex.projects.length > 0) {
+          const nextId = newIndex.projects[0].id;
+          const nextLoaded = loadProjectFromSlot(nextId);
+          if (nextLoaded.ok && nextLoaded.present) {
+            try {
+              const patch = applyProjectPackage(nextLoaded.package);
+              const merged = { ...state, ...patch };
+              const recomputed = recomputeAllValidation(merged);
+              saveProjectsIndex({ ...newIndex, activeProjectId: nextId });
+              setState({
+                ...patch,
+                ...recomputed,
+                currentProjectId: nextId,
+                projectsIndex: newIndex.projects,
+                projectPickerOpen: false,
+                dirty: false,
+                loadedFromStorage: true,
+                lastSavedAt: nextLoaded.package.savedAt ?? null,
+                persistenceMessage: { kind: "info", text: `Deleted. Opened "${patch.project?.name ?? nextId}".` }
+              });
+              break;
+            } catch { /* fall through to fixture reset */ }
+          }
+        }
+        // No projects left — reset to fixtures
+        const merged = {
+          ...state,
+          project: fixtureSnapshots.project,
+          designBasis: fixtureSnapshots.designBasis,
+          geometry: fixtureSnapshots.geometry,
+          train: fixtureSnapshots.train,
+          kinematics: fixtureSnapshots.kinematics,
+          loadFamilies: fixtureSnapshots.loadFamilies,
+          trainPositions: fixtureSnapshots.trainPositions
+        };
+        const recomputed = recomputeAllValidation(merged);
+        setState({
+          project: merged.project, designBasis: merged.designBasis,
+          geometry: merged.geometry, train: merged.train, kinematics: merged.kinematics,
+          loadFamilies: merged.loadFamilies, trainPositions: merged.trainPositions,
+          ...recomputed,
+          currentProjectId: null,
+          projectsIndex: newIndex.projects,
+          projectPickerOpen: false,
+          dirty: false,
+          loadedFromStorage: false,
+          lastSavedAt: null,
+          persistenceMessage: { kind: "info", text: "Project deleted. Showing bundled fixtures." }
+        });
+      } else {
+        setState({ projectsIndex: newIndex.projects, persistenceMessage: { kind: "info", text: `Deleted "${delEntry?.name ?? delId}".` } });
+      }
       break;
     }
 
@@ -429,12 +630,14 @@ function handleAction(action, target) {
           const stNow = getState();
           const merged = { ...stNow, ...patch };
           const recomputed = recomputeAllValidation(merged);
+          // Import lands as a new unsaved project — user must Save or Save As to keep it
           setState({
             ...patch,
             ...recomputed,
+            currentProjectId: null,
             dirty: true,
             loadedFromStorage: false,
-            persistenceMessage: { kind: "info", text: `Imported package (savedAt ${parsed.savedAt ?? "unknown"}). Click Save to persist.` }
+            persistenceMessage: { kind: "info", text: `Imported "${parsed.project?.name ?? "package"}". Click Save to create a new project slot.` }
           });
         } catch (err) {
           setState({ persistenceMessage: { kind: "error", text: `Import failed: ${err.message}` } });
@@ -442,14 +645,13 @@ function handleAction(action, target) {
       }).catch((err) => {
         setState({ persistenceMessage: { kind: "error", text: `Import failed: ${err.message}` } });
       });
-      // Clear the input so the same file can be re-imported
       target.value = "";
       break;
     }
   }
 
   if (MUTATION_ACTIONS.has(action)) {
-    setState({ dirty: true, persistenceMessage: null });
+    setState({ dirty: true, persistenceMessage: null, projectPickerOpen: false });
     scheduleAutosave();
   }
 }
@@ -541,7 +743,14 @@ async function bootstrap() {
   fixtureSnapshots.loadFamilies = JSON.parse(JSON.stringify(loadFamilies));
   fixtureSnapshots.trainPositions = JSON.parse(JSON.stringify(trainPositions));
 
-  // If the user has a previously-saved package in localStorage, apply it on top of fixtures.
+  // ── Migrate legacy single-slot if present ────────────────────────────────
+  migrateFromLegacySlot();
+
+  // ── Load project index and resolve active project ─────────────────────────
+  const indexResult = loadProjectsIndex();
+  const projectsIndex = indexResult.index.projects;
+  let activeId = indexResult.index.activeProjectId;
+
   let activeProject = project;
   let activeDesignBasis = designBasis;
   let activeGeometry = geometry;
@@ -552,23 +761,32 @@ async function bootstrap() {
   let lastSavedAt = null;
   let loadedFromStorage = false;
   let persistenceMessage = null;
+  let currentProjectId = null;
 
-  const loaded = loadFromStorage();
-  if (loaded.ok && loaded.present) {
-    try {
-      const patch = applyProjectPackage(loaded.package);
-      activeProject = patch.project ?? activeProject;
-      activeDesignBasis = patch.designBasis ?? activeDesignBasis;
-      activeGeometry = patch.geometry ?? activeGeometry;
-      activeTrain = patch.train ?? activeTrain;
-      activeKinematics = patch.kinematics ?? activeKinematics;
-      activeLoadFamilies = patch.loadFamilies ?? activeLoadFamilies;
-      activeTrainPositions = patch.trainPositions ?? activeTrainPositions;
-      lastSavedAt = loaded.package.savedAt ?? null;
-      loadedFromStorage = true;
-      persistenceMessage = { kind: "info", text: "Loaded saved project from browser storage." };
-    } catch (err) {
-      persistenceMessage = { kind: "error", text: `Saved project ignored: ${err.message}` };
+  if (activeId) {
+    const slotResult = loadProjectFromSlot(activeId);
+    if (slotResult.ok && slotResult.present) {
+      try {
+        const patch = applyProjectPackage(slotResult.package);
+        activeProject = patch.project ?? activeProject;
+        activeDesignBasis = patch.designBasis ?? activeDesignBasis;
+        activeGeometry = patch.geometry ?? activeGeometry;
+        activeTrain = patch.train ?? activeTrain;
+        activeKinematics = patch.kinematics ?? activeKinematics;
+        activeLoadFamilies = patch.loadFamilies ?? activeLoadFamilies;
+        activeTrainPositions = patch.trainPositions ?? activeTrainPositions;
+        lastSavedAt = slotResult.package.savedAt ?? null;
+        loadedFromStorage = true;
+        currentProjectId = activeId;
+        persistenceMessage = { kind: "info", text: `Loaded "${activeProject.name ?? activeId}".` };
+      } catch (err) {
+        persistenceMessage = { kind: "error", text: `Saved project ignored: ${err.message}` };
+        activeId = null;
+      }
+    } else {
+      // Slot missing (deleted externally) — fall back to fixtures
+      activeId = null;
+      persistenceMessage = { kind: "warn", text: "Saved project slot not found. Showing bundled fixtures." };
     }
   }
 
@@ -594,6 +812,8 @@ async function bootstrap() {
     kinematics: activeKinematics,
     loadFamilies: activeLoadFamilies,
     trainPositions: activeTrainPositions,
+    currentProjectId,
+    projectsIndex,
     dirty: false,
     lastSavedAt,
     loadedFromStorage,
@@ -697,6 +917,15 @@ onRouteChange((route) => {
 
 subscribe(render);
 setupEventHandlers();
+
+// Warn before closing when there are unsaved changes
+window.addEventListener("beforeunload", (e) => {
+  if (getState().dirty) {
+    e.preventDefault();
+    e.returnValue = "";
+  }
+});
+
 render();
 bootstrap().catch((error) => {
   const root = document.querySelector("#app-root");
