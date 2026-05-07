@@ -89,6 +89,59 @@ A `formulaScope` may only be marked `APPROVED` after:
 1. The formula list (with code-section anchors) is recorded in `docs/load-methodology.md`.
 2. Reviewers sign off in `docs/change-management.md`.
 3. `AGENTS.md` is updated to reflect the new formula-scope status.
-4. `approvedCodeIds` in `shared/data/code-sets.json` is populated for that scope.
+4. `approvedCodeIds` and `approvedFormulaIds` in `shared/data/code-sets.json` are populated for that scope.
 
 Until those four steps complete for a given scope, all engine code emitting numeric outputs for that scope must remain absent or no-op.
+
+## Sign Convention Authority
+This section is the **single source of truth** for sign conventions used by every wheel-load and envelope output. It is referenced from `docs/load-methodology.md` (`signConventionRef`) and is anchored to fields already present in `shared/schemas/wheel-load-result.schema.json`.
+
+### Axis Identifiers
+The wheel-load schema declares three orthogonal axes per axle via `axleResults[*].localAxes`:
+
+| Schema field | Physical role | Default identifier | Positive direction (default frame) |
+| --- | --- | --- | --- |
+| `localAxes.longitudinal` | Direction of train travel | `X` | Forward along the reference line in the direction of travel. |
+| `localAxes.lateral` | Across the track | `Y` | To the **right** of the direction of travel, looking forward. |
+| `localAxes.vertical` | Normal to running surface | `Z` | **Up**, opposing gravity. |
+
+The three axes form a right-handed triad in their default identifier assignment (`X` × `Y` = `Z`). Producers MAY remap which physical role each `X`/`Y`/`Z` plays per axle by writing the chosen identifiers into `localAxes`; consumers MUST honor the per-axle assignment. The right-handed orientation MUST be preserved.
+
+### Force Sign Conventions
+The schema field `axleResults[*].forces` carries three signed numbers. Positive values mean:
+
+| Field | Positive convention |
+| --- | --- |
+| `forces.vertical` | Upward (away from the running surface, opposing gravity). |
+| `forces.lateral` | Toward `+Y` (right of travel direction in the default frame). |
+| `forces.longitudinal` | Toward `+X` (in the direction of travel; e.g., traction is positive, braking reaction at the rail is positive in the same axle's `+X`). |
+
+A negative value means the opposite direction along the same axis. There is no separate "sign" field — the numeric sign is the convention.
+
+### Moment Sign Conventions
+The schema field `axleResults[*].moments` carries three signed numbers. Each follows the **right-hand rule** about its named axis:
+
+| Field | Axis (default) | Positive sense |
+| --- | --- | --- |
+| `moments.rolling` | longitudinal (`+X`) | Right-hand rule about longitudinal — top of car rolls toward `+Y` (right). |
+| `moments.pitching` | lateral (`+Y`) | Right-hand rule about lateral — front of car pitches up toward `+Z`. |
+| `moments.yawing` | vertical (`+Z`) | Right-hand rule about vertical — front of car yaws toward `+Y` (right). |
+
+If a producer remaps `localAxes`, the right-hand-rule interpretation is taken about the **chosen** physical axis, not the default identifier.
+
+### Per-Section Overrides
+`localAxes` is recorded **per axle result**, not globally. This allows a curved or articulated train to declare different physical axes per section without breaking the contract. Reconciliation rules:
+
+1. Two axles in the same section MUST agree on `localAxes` unless the section's contract explicitly allows per-axle frames (no current section schema does).
+2. Two sections in the same train MAY disagree on `localAxes`. Consumers MUST treat each axle in its own declared frame and never silently re-project.
+3. Envelope aggregation (`envelope-result.schema.json`) MUST record which `localAxes` it assumes; mixed frames within one envelope channel are forbidden until a frame-reconciliation formula is added to `docs/load-methodology.md` and approved.
+
+### Force-Family Contribution Sign Inheritance
+Per-load-family entries in `axleResults[*].contributions[*]` carry the same axis convention as their parent `forces` block. The arithmetic invariant (when all formulas are `APPROVED`):
+
+> for each axle, `forces.{vertical,lateral,longitudinal}` equals the signed sum of the corresponding fields across `contributions[*]`.
+
+Producers MUST NOT introduce contribution decompositions whose signed sum diverges from the parent force vector. Engines that violate this MUST surface a `BLOCKED` readiness with a per-axle blocking issue.
+
+### Authority
+This section is the **only** place sign conventions are normatively stated. `docs/load-methodology.md` references it via `signConventionRef`. Schemas reference it via the field semantics enumerated above. Any change to a sign convention requires a new entry in `docs/change-management.md` and bumping the affected `formulaId` (e.g., `WL-V-001` → `WL-V-002`) — never silently editing a published convention.
