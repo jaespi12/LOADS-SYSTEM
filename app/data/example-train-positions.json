@@ -5,11 +5,11 @@
   "stepLength": 5,
   "startStation": 0,
   "endStation": 50,
-  "repeatLength": 82,
+  "repeatLength": 164,
   "positions": [
-    { "positionId": "P-000", "headStation": 0, "tailStation": -82 },
-    { "positionId": "P-005", "headStation": 5, "tailStation": -77 },
-    { "positionId": "P-010", "headStation": 10, "tailStation": -72 },
-    { "positionId": "P-015", "headStation": 15, "tailStation": -67 }
+    { "positionId": "P-000", "headStation": 0,  "tailStation": -164 },
+    { "positionId": "P-005", "headStation": 5,  "tailStation": -159 },
+    { "positionId": "P-010", "headStation": 10, "tailStation": -154 },
+    { "positionId": "P-015", "headStation": 15, "tailStation": -149 }
   ]
 }

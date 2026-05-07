@@ -1,15 +1,31 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "geometry-station.schema.json",
-  "title": "Geometry Station",
+  "title": "Geometry Profile",
   "type": "object",
-  "required": ["station", "x", "y", "z"],
+  "required": ["geometryId", "referenceLineType", "stations"],
   "properties": {
-    "station": { "type": "number" },
-    "x": { "type": "number" },
-    "y": { "type": "number" },
-    "z": { "type": "number" },
-    "curveRadius": { "type": "number" }
+    "geometryId": { "type": "string", "minLength": 1 },
+    "referenceLineType": {
+      "type": "string",
+      "enum": ["TRACK_CENTERLINE", "RAIL_LEFT", "RAIL_RIGHT"]
+    },
+    "stations": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["station", "x", "y", "z"],
+        "properties": {
+          "station": { "type": "number" },
+          "x": { "type": "number" },
+          "y": { "type": "number" },
+          "z": { "type": "number" },
+          "curveRadius": { "type": "number" }
+        },
+        "additionalProperties": false
+      }
+    }
   },
   "additionalProperties": false
 }
