@@ -8,6 +8,9 @@ const state = {
   loadFamilies: null,
   geometry: null,
   trainPositions: null,
+  groupedCases: [],
+  groupingResult: null,
+  groupedCaseValidation: { valid: false, errors: ["Grouped cases have not been generated yet."] },
   validation: {
     designBasis: { valid: false, errors: ["Design basis has not been validated yet."] },
     train: { valid: false, errors: ["Train has not been validated yet."] },

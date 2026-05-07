@@ -2,16 +2,51 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "grouped-case.schema.json",
   "title": "Grouped Case",
+  "description": "Deterministic grouped-case envelope produced from a validated train-position profile. Formula-free; no engineering math is implied by this contract.",
   "type": "object",
-  "required": ["id", "name", "members", "readiness"],
+  "required": [
+    "groupedCaseId",
+    "groupingRuleId",
+    "sourcePositionIds",
+    "positionCount",
+    "stationCoverage",
+    "repeatLengthReference",
+    "readiness"
+  ],
   "properties": {
-    "id": { "type": "string", "minLength": 1 },
-    "name": { "type": "string", "minLength": 1 },
+    "groupedCaseId": { "type": "string", "minLength": 1 },
+    "name": { "type": "string" },
     "description": { "type": "string" },
-    "members": {
+    "groupingRuleId": { "type": "string", "enum": ["SINGLE_PASS", "STEP_WINDOW"] },
+    "trainId": { "type": "string" },
+    "positionProfileId": { "type": "string" },
+    "sourcePositionIds": {
       "type": "array",
-      "items": { "type": "string" },
-      "minItems": 1
+      "minItems": 1,
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "positionCount": { "type": "integer", "minimum": 1 },
+    "stationCoverage": {
+      "type": "object",
+      "required": ["minHeadStation", "maxHeadStation"],
+      "properties": {
+        "minHeadStation": { "type": "number" },
+        "maxHeadStation": { "type": "number" },
+        "minTailStation": { "type": "number" },
+        "maxTailStation": { "type": "number" },
+        "spanLength": { "type": "number" }
+      },
+      "additionalProperties": false
+    },
+    "repeatLengthReference": {
+      "type": "object",
+      "required": ["repeatLength"],
+      "properties": {
+        "repeatLength": { "type": "number" },
+        "trainSectionLengthSum": { "type": "number" },
+        "consistent": { "type": "boolean" }
+      },
+      "additionalProperties": false
     },
     "readiness": {
       "type": "object",

@@ -10,6 +10,7 @@ import { renderGeometryView } from "./views/geometry-view.js";
 import { renderKinematicsView } from "./views/kinematics-view.js";
 import { renderLoadFamilyView } from "./views/load-generator-view.js";
 import { renderTrainPositionView } from "./views/case-grouping-view.js";
+import { buildGroupedCases } from "./engines/grouping-engine.js";
 import { renderAuditView } from "./views/audit-view.js";
 import { renderEnvelopesView } from "./views/envelopes-view.js";
 import { renderExportView } from "./views/export-view.js";
@@ -23,7 +24,7 @@ async function loadJson(path) {
 async function bootstrap() {
   const navRegistry = await loadNavRegistry();
 
-  const [codeSets, unitSystems, loadFamilyTypes, rideStates, exportTargets, statusOptions, designBasisSchema, geometrySchema, trainSchema, kinematicsSchema, loadFamilySchema, trainPositionSchema, project, geometry, train, kinematics, loadFamilies, trainPositions] = await Promise.all([
+  const [codeSets, unitSystems, loadFamilyTypes, rideStates, exportTargets, statusOptions, designBasisSchema, geometrySchema, trainSchema, kinematicsSchema, loadFamilySchema, trainPositionSchema, groupedCaseSchema, project, geometry, train, kinematics, loadFamilies, trainPositions] = await Promise.all([
     loadJson(APP_CONFIG.dataPaths.codeSets),
     loadJson(APP_CONFIG.dataPaths.unitSystems),
     loadJson(APP_CONFIG.dataPaths.loadFamilyTypes),
@@ -36,6 +37,7 @@ async function bootstrap() {
     loadJson("shared/schemas/kinematics-profile.schema.json"),
     loadJson("shared/schemas/load-family-profile.schema.json"),
     loadJson("shared/schemas/train-position-profile.schema.json"),
+    loadJson("shared/schemas/grouped-case.schema.json"),
     loadJson("app/data/example-project.json"),
     loadJson("app/data/example-geometry.json"),
     loadJson("app/data/example-train.json"),
@@ -46,6 +48,13 @@ async function bootstrap() {
 
   const designBasis = project.designBasis ?? null;
   const requiredFamilyIds = (loadFamilyTypes.families ?? []).filter((f) => f.required).map((f) => f.id);
+  const groupedCaseReadiness = validateGroupedCaseReadiness({ train, geometry, trainPositions });
+  const groupingResult = buildGroupedCases({ trainPositions, train, readiness: groupedCaseReadiness });
+  const perCaseValidation = groupingResult.groupedCases.map((gc) => validateAgainstSchema(groupedCaseSchema, gc));
+  const groupedCaseValidation = {
+    valid: perCaseValidation.every((r) => r.valid),
+    errors: perCaseValidation.flatMap((r, i) => r.errors.map((e) => `[${groupingResult.groupedCases[i].groupedCaseId}] ${e}`))
+  };
 
   setState({
     initialized: true,
@@ -59,6 +68,9 @@ async function bootstrap() {
     kinematics,
     loadFamilies,
     trainPositions,
+    groupedCases: groupingResult.groupedCases,
+    groupingResult,
+    groupedCaseValidation,
     validation: {
       designBasis: validateAgainstSchema(designBasisSchema, designBasis),
       geometry: validateAgainstSchema(geometrySchema, geometry),
@@ -67,7 +79,7 @@ async function bootstrap() {
       loadFamilies: validateAgainstSchema(loadFamilySchema, loadFamilies),
       requiredLoadFamilies: validateRequiredLoadFamilies(loadFamilies, requiredFamilyIds),
       trainPositions: validateAgainstSchema(trainPositionSchema, trainPositions),
-      groupedCaseReadiness: validateGroupedCaseReadiness({ train, geometry, trainPositions })
+      groupedCaseReadiness
     }
   });
 }
@@ -78,7 +90,7 @@ function resolveRoute(route, registry) {
 }
 
 function renderActiveView(state) {
-  const { route, designBasis, geometry, train, kinematics, loadFamilies, trainPositions, validation, lookups } = state;
+  const { route, designBasis, geometry, train, kinematics, loadFamilies, trainPositions, validation, lookups, groupedCases, groupingResult, groupedCaseValidation } = state;
 
   switch (route) {
     case "#/home":
@@ -94,7 +106,14 @@ function renderActiveView(state) {
     case "#/load-families":
       return renderLoadFamilyView({ loadFamilies, validation: validation.loadFamilies, lookups });
     case "#/train-positions":
-      return renderTrainPositionView({ trainPositions, validation: validation.trainPositions, readiness: validation.groupedCaseReadiness });
+      return renderTrainPositionView({
+        trainPositions,
+        validation: validation.trainPositions,
+        readiness: validation.groupedCaseReadiness,
+        groupedCases,
+        groupingResult,
+        groupedCaseValidation
+      });
     case "#/audit":
       return renderAuditView();
     case "#/envelopes":
