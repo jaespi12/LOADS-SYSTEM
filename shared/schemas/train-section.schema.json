@@ -7,6 +7,8 @@
   "properties": {
     "trainId": { "type": "string", "minLength": 1 },
     "trainName": { "type": "string", "minLength": 1 },
+    "vehicleType": { "type": "string" },
+    "notes": { "type": "string" },
     "sections": {
       "type": "array",
       "minItems": 1,
@@ -17,6 +19,29 @@
           "id": { "type": "string", "minLength": 1 },
           "name": { "type": "string", "minLength": 1 },
           "length": { "type": "number" },
+          "type": { "type": "string", "enum": ["LEAD", "MIDDLE", "TRAILER", "BOGIE_FRAME"] },
+          "gapToNext": { "type": "number" },
+          "mass": { "type": ["number", "null"] },
+          "centerOfMass": {
+            "type": "object",
+            "properties": {
+              "x": { "type": ["number", "null"] },
+              "y": { "type": ["number", "null"] },
+              "z": { "type": ["number", "null"] }
+            },
+            "additionalProperties": false
+          },
+          "inertia": {
+            "type": "object",
+            "properties": {
+              "Ixx": { "type": ["number", "null"] },
+              "Iyy": { "type": ["number", "null"] },
+              "Izz": { "type": ["number", "null"] }
+            },
+            "additionalProperties": false
+          },
+          "participatesInLoadGen": { "type": "boolean" },
+          "dataSource": { "type": "string", "enum": ["MANUAL", "IMPORTED", "PENDING"] },
           "axles": {
             "type": "array",
             "minItems": 1,
@@ -25,7 +50,12 @@
               "required": ["offset", "load"],
               "properties": {
                 "offset": { "type": "number" },
-                "load": { "type": "number" }
+                "load": { "type": "number" },
+                "axleId": { "type": "string" },
+                "wheelPairId": { "type": "string" },
+                "gauge": { "type": ["number", "null"] },
+                "leftWheelId": { "type": "string" },
+                "rightWheelId": { "type": "string" }
               },
               "additionalProperties": false
             }

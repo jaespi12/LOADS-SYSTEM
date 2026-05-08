@@ -25,5 +25,53 @@
       "label": "ASTM F2291-25c Standard Practice for Design of Amusement Rides and Devices",
       "discipline": "Ride Systems"
     }
+  ],
+  "formulaScopes": [
+    {
+      "id": "WHEEL_LOAD_V0",
+      "title": "Wheel-Load Computation Boundary",
+      "status": "PENDING_APPROVAL",
+      "candidateCodeIds": ["ASCE-SEI-7-22", "ASTM-F2291-25C"],
+      "approvedCodeIds": [],
+      "formulaIds": [
+        "WL-V-001",
+        "WL-L-001",
+        "WL-X-001",
+        "WL-MR-001",
+        "WL-MP-001",
+        "WL-MY-001",
+        "WL-CTRB-001"
+      ],
+      "approvedFormulaIds": [],
+      "formulaRegistryRef": "docs/load-methodology.md#scope-wheel_load_v0",
+      "signConventionRef": "docs/design-basis.md#sign-convention-authority",
+      "consumes": [
+        "groupedCases",
+        "geometry.stations",
+        "train.sections.axles",
+        "kinematics.entries",
+        "loadFamilies.families"
+      ],
+      "produces": ["wheel-load-result.schema.json"],
+      "notes": "Formula list is enumerated by ID in docs/load-methodology.md. Equations land in that doc only after approval; until then approvedFormulaIds is empty and engines emit null numerics."
+    },
+    {
+      "id": "ENVELOPE_V0",
+      "title": "Envelope Aggregation Boundary",
+      "status": "PENDING_APPROVAL",
+      "candidateCodeIds": ["ASCE-SEI-7-22"],
+      "approvedCodeIds": [],
+      "formulaIds": [
+        "ENV-MAX-001",
+        "ENV-MIN-001",
+        "ENV-ABS-001"
+      ],
+      "approvedFormulaIds": [],
+      "formulaRegistryRef": "docs/load-methodology.md#scope-envelope_v0",
+      "signConventionRef": "docs/design-basis.md#sign-convention-authority",
+      "consumes": ["wheel-load-result.schema.json"],
+      "produces": ["envelope-result.schema.json"],
+      "notes": "Envelope shape is defined; aggregation rules and absolute-max conventions are gated behind explicit approval."
+    }
   ]
 }

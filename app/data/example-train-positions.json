@@ -5,11 +5,18 @@
   "stepLength": 5,
   "startStation": 0,
   "endStation": 50,
-  "repeatLength": 82,
+  "repeatLength": 164,
   "positions": [
-    { "positionId": "P-000", "headStation": 0, "tailStation": -82 },
-    { "positionId": "P-005", "headStation": 5, "tailStation": -77 },
-    { "positionId": "P-010", "headStation": 10, "tailStation": -72 },
-    { "positionId": "P-015", "headStation": 15, "tailStation": -67 }
+    { "positionId": "P-000", "headStation": 0,  "tailStation": -164 },
+    { "positionId": "P-005", "headStation": 5,  "tailStation": -159 },
+    { "positionId": "P-010", "headStation": 10, "tailStation": -154 },
+    { "positionId": "P-015", "headStation": 15, "tailStation": -149 },
+    { "positionId": "P-020", "headStation": 20, "tailStation": -144 },
+    { "positionId": "P-025", "headStation": 25, "tailStation": -139 },
+    { "positionId": "P-030", "headStation": 30, "tailStation": -134 },
+    { "positionId": "P-035", "headStation": 35, "tailStation": -129 },
+    { "positionId": "P-040", "headStation": 40, "tailStation": -124 },
+    { "positionId": "P-045", "headStation": 45, "tailStation": -119 },
+    { "positionId": "P-050", "headStation": 50, "tailStation": -114 }
   ]
 }

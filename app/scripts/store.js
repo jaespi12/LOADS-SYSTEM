@@ -1,5 +1,6 @@
 const state = {
   initialized: false,
+  schemas: {},
   lookups: {},
   project: null,
   designBasis: null,
@@ -8,6 +9,20 @@ const state = {
   loadFamilies: null,
   geometry: null,
   trainPositions: null,
+  // ── persistence-tracking fields ─────────────────────────────────────────
+  dirty: false,
+  lastSavedAt: null,
+  loadedFromStorage: false,
+  persistenceMessage: null,
+  // ── multi-project fields ─────────────────────────────────────────────────
+  currentProjectId: null,
+  projectsIndex: [],          // [{ id, name, createdAt, savedAt }]
+  projectPickerOpen: false,
+  pendingDialog: null,        // { type: 'new-project' | 'save-as' } | null
+  // ────────────────────────────────────────────────────────────────────────
+  groupedCases: [],
+  groupingResult: null,
+  groupedCaseValidation: { valid: false, errors: ["Grouped cases have not been generated yet."] },
   validation: {
     designBasis: { valid: false, errors: ["Design basis has not been validated yet."] },
     train: { valid: false, errors: ["Train has not been validated yet."] },

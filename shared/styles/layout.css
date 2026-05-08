@@ -7,6 +7,6 @@ body {
 
 .app-header,
 .app-main {
-  width: min(1100px, 92vw);
+  width: min(1800px, 96vw);
   margin: 0 auto;
 }
