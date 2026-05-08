@@ -31,12 +31,16 @@
 }
 
 .status-pill {
+  display: inline-flex;
+  align-items: center;
   border: 1px solid currentColor;
   border-radius: 999px;
-  padding: 0.2rem 0.65rem;
+  padding: 0.25rem 0.65rem;
   font-size: 0.8rem;
   font-weight: 700;
   letter-spacing: 0.02em;
+  line-height: 1.2;
+  box-sizing: border-box;
 }
 
 .status-ok {
@@ -461,6 +465,10 @@
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+.summary-card-status .summary-value {
+  overflow: visible;
 }
 
 .kpi-badge {
