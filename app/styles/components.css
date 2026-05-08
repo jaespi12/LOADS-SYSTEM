@@ -1152,3 +1152,53 @@
 .summary-card-status .status-pill {
   font-size: 0.72rem;
 }
+
+/* ── Unit system bar ─────────────────────────────────────────────────────── */
+.unit-system-bar {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  padding: 0.35rem 0.75rem;
+  margin-bottom: 0.6rem;
+  background: rgba(148, 163, 184, 0.05);
+  border: 1px solid #1f2937;
+  border-radius: 6px;
+  font-size: 0.72rem;
+  color: var(--muted);
+}
+
+.unit-system-label {
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.unit-system-value {
+  color: #e2e8f0;
+  font-weight: 600;
+}
+
+.unit-sep {
+  color: #374151;
+}
+
+.unit-system-hint {
+  color: var(--muted);
+}
+
+.unit-system-hint strong {
+  color: #94a3b8;
+  font-weight: 600;
+}
+
+/* ── Inline unit tag (used in labels and table headers) ──────────────────── */
+.unit-tag {
+  font-size: 0.72em;
+  font-weight: 500;
+  color: #475569;
+  letter-spacing: 0;
+  text-transform: none;
+  vertical-align: baseline;
+}
