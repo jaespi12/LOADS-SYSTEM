@@ -140,4 +140,34 @@ const baseValidation = { valid: true, errors: [] };
   assert.ok(html.includes("summary-chevron"));
 }
 
+// Axle grid editor: all axle fields render, no wide-table overflow structure
+{
+  const trainWithAxle = {
+    trainId: "T", trainName: "T",
+    sections: [{ id: "A", length: 10, axles: [{
+      axleId: "A1", offset: 5, load: 10, wheelPairId: "WP-1",
+      gauge: 4.708, leftWheelId: "WL-1", rightWheelId: "WR-1"
+    }] }]
+  };
+  const html = renderTrainView({ train: trainWithAxle, validation: baseValidation });
+  // Grid wrapper present
+  assert.ok(html.includes('class="axle-editor"'), "axle-editor wrapper missing");
+  assert.ok(html.includes('class="axle-card"'), "axle-card missing");
+  assert.ok(html.includes('class="axle-row-primary"'), "axle-row-primary missing");
+  assert.ok(html.includes('class="axle-row-secondary"'), "axle-row-secondary missing");
+  // All field data-* targets still present
+  assert.ok(html.includes('field="axleId"'), 'axleId field missing');
+  assert.ok(html.includes('field="offset"'), 'offset field missing');
+  assert.ok(html.includes('field="load"'), 'load field missing');
+  assert.ok(html.includes('field="wheelPairId"'), 'wheelPairId field missing');
+  assert.ok(html.includes('field="gauge"'), 'gauge field missing');
+  assert.ok(html.includes('field="leftWheelId"'), 'leftWheelId field missing');
+  assert.ok(html.includes('field="rightWheelId"'), 'rightWheelId field missing');
+  // Remove button still present
+  assert.ok(html.includes('data-action="remove-axle"'), 'remove-axle button missing');
+  // No overflow table wrapping the per-section axle editor
+  assert.ok(!html.includes('data-table-axles'), 'data-table-axles class still present in axle section');
+  assert.ok(html.includes('axle-editor'), 'axle-editor grid wrapper missing');
+}
+
 console.log("train-view-panels.test.js passed");
