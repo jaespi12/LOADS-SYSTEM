@@ -901,6 +901,18 @@
   flex-wrap: wrap;
 }
 
+/* Secondary (non-primary, non-danger) buttons in the command bar get a dark surface */
+.project-controls .btn:not(.btn-primary):not(.btn-danger) {
+  background: #1f2937;
+  border-color: #374151;
+  color: var(--text);
+}
+
+.project-controls .btn:not(.btn-primary):not(.btn-danger):hover {
+  background: #374151;
+  border-color: #4b5563;
+}
+
 /* ── Project picker dropdown ──────────────────────────────────────────────── */
 .project-picker {
   position: absolute;

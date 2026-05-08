@@ -9,7 +9,7 @@
 
 .app-header {
   border-bottom: 1px solid #1f2937;
-  padding: 0.7rem 2.5rem;
+  padding: 0.7rem clamp(1rem, 1.5vw, 1.75rem);
 }
 
 .app-main {
@@ -17,7 +17,7 @@
   grid-template-columns: 280px minmax(0, 1fr);
   gap: 1.5rem;
   align-items: start;
-  padding: 1.5rem 2.5rem 2rem;
+  padding: 1.25rem clamp(1rem, 1.5vw, 1.75rem) 2rem;
   min-height: calc(100vh - 3.25rem);
 }
 
