@@ -700,120 +700,64 @@
   min-width: 70px;
 }
 
-/* ── Axle compact grid table (no horizontal scrollbar) ───────────────────── */
-.axle-table {
-  display: grid;
-  min-width: 0;
+/* ── Axle Excel-style table ──────────────────────────────────────────────── */
+.axle-table-wrap {
+  overflow-x: auto;
+  margin-top: 0.35rem;
+}
+
+.data-table-axles {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.82rem;
+  white-space: nowrap;
+}
+
+.data-table-axles th,
+.data-table-axles td {
+  padding: 0.18rem 0.4rem;
   border: 1px solid var(--border);
-  border-radius: 4px;
-  overflow: visible;
+  vertical-align: middle;
 }
 
-.axle-table-header,
-.axle-table-row {
-  display: grid;
-  grid-template-columns:
-    36px
-    minmax(110px, 1.1fr)
-    minmax(80px, 0.8fr)
-    minmax(80px, 0.8fr)
-    minmax(120px, 1fr)
-    minmax(80px, 0.7fr)
-    40px;
-  gap: 0.4rem;
-  align-items: center;
-  min-width: 0;
-  padding: 0.25rem 0.5rem;
-}
-
-.axle-table-header {
+.data-table-axles thead tr {
   background: #1f2937;
   color: var(--muted);
-  font-weight: 600;
   font-size: 0.72rem;
+  font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.04em;
-  border-bottom: 1px solid var(--border);
-  border-radius: 4px 4px 0 0;
 }
 
-.axle-table-row {
-  border-bottom: 1px solid var(--border);
+.data-table-axles tbody tr:nth-child(odd) {
+  background: var(--surface);
 }
 
-.axle-table-row:last-of-type {
-  border-bottom: none;
+.data-table-axles tbody tr:nth-child(even) {
+  background: color-mix(in srgb, var(--surface) 80%, var(--bg) 20%);
 }
 
-.axle-table-row input.field-input {
-  width: 100%;
-  max-width: 100%;
-  min-width: 0;
-  box-sizing: border-box;
-  padding: 0.2rem 0.4rem;
+.data-table-axles tbody tr:hover {
+  background: color-mix(in srgb, var(--accent) 8%, var(--surface) 92%);
+}
+
+.data-table-axles .field-input {
+  padding: 0.18rem 0.35rem;
   font-size: 0.82rem;
-}
-
-.axle-table-detail {
-  display: flex;
-  gap: 0.5rem;
-  align-items: center;
-  padding: 0.15rem 0.5rem 0.3rem 3rem;
-  border-bottom: 1px solid var(--border);
-  min-width: 0;
-  background: color-mix(in srgb, var(--bg) 60%, var(--surface) 40%);
-}
-
-.axle-table-detail:last-child {
-  border-bottom: none;
-}
-
-.axle-detail-label {
-  flex-shrink: 0;
-  font-size: 0.68rem;
-  color: var(--muted);
-}
-
-.axle-detail-field {
-  display: flex;
-  align-items: center;
-  gap: 0.25rem;
-  min-width: 0;
-  flex: 1;
-}
-
-.axle-detail-field input.field-input {
-  width: 100%;
-  min-width: 0;
+  border-radius: 2px;
+  height: 1.6rem;
   box-sizing: border-box;
-  font-size: 0.82rem;
-  padding: 0.2rem 0.4rem;
 }
 
-.axle-detail-hint {
-  font-size: 0.7rem;
-  color: var(--muted);
-  flex-shrink: 0;
+.data-table-axles .field-num,
+.data-table-axles .field-text {
+  max-width: none;
+  width: 100%;
+  min-width: 60px;
 }
 
 .axle-table-empty {
   padding: 0.6rem;
-}
-
-@media (max-width: 900px) {
-  .axle-table-header,
-  .axle-table-row {
-    grid-template-columns:
-      28px
-      minmax(80px, 1.1fr)
-      minmax(60px, 0.8fr)
-      minmax(60px, 0.8fr)
-      minmax(90px, 1fr)
-      minmax(60px, 0.7fr)
-      36px;
-    gap: 0.25rem;
-    padding: 0.2rem 0.35rem;
-  }
 }
 
 /* Tight reference tables (right column + global axle table) */

@@ -140,7 +140,7 @@ const baseValidation = { valid: true, errors: [] };
   assert.ok(html.includes("summary-chevron"));
 }
 
-// Axle compact table: all axle fields render, compact grid-table structure present
+// Axle compact table: all axle fields render, single-row Excel-style table present
 {
   const trainWithAxle = {
     trainId: "T", trainName: "T",
@@ -150,12 +150,13 @@ const baseValidation = { valid: true, errors: [] };
     }] }]
   };
   const html = renderTrainView({ train: trainWithAxle, validation: baseValidation });
-  // Compact table structure present
-  assert.ok(html.includes('class="axle-table"'), "axle-table wrapper missing");
-  assert.ok(html.includes('class="axle-table-header"'), "axle-table-header missing");
-  assert.ok(html.includes('class="axle-table-row"'), "axle-table-row missing");
-  assert.ok(html.includes('class="axle-table-detail"'), "axle-table-detail missing");
-  // All field data-* targets still present
+  // Excel-style table structure present
+  assert.ok(html.includes('class="data-table data-table-axles"'), "data-table-axles table missing");
+  assert.ok(html.includes('<thead>'), "thead missing");
+  assert.ok(html.includes('<tbody>'), "tbody missing");
+  assert.ok(html.includes('Left Wheel ID'), "Left Wheel ID header missing");
+  assert.ok(html.includes('Right Wheel ID'), "Right Wheel ID header missing");
+  // All field data-* targets present in a single row (no secondary detail row)
   assert.ok(html.includes('field="axleId"'), 'axleId field missing');
   assert.ok(html.includes('field="offset"'), 'offset field missing');
   assert.ok(html.includes('field="load"'), 'load field missing');
@@ -165,8 +166,8 @@ const baseValidation = { valid: true, errors: [] };
   assert.ok(html.includes('field="rightWheelId"'), 'rightWheelId field missing');
   // Remove button still present
   assert.ok(html.includes('data-action="remove-axle"'), 'remove-axle button missing');
-  // No overflow table or stacked card layout
-  assert.ok(!html.includes('data-table-axles'), 'data-table-axles class still present');
+  // No old secondary detail row or stacked card layout
+  assert.ok(!html.includes('axle-table-detail'), 'old axle-table-detail secondary row still present');
   assert.ok(!html.includes('axle-card'), 'old axle-card stacked layout still present');
 }
 

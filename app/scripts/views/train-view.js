@@ -143,26 +143,17 @@ function renderTrainDetails(train) {
 function renderAxleRow(axle, sectionIdx, axleIdx) {
   const attrs = (field) => ({ action: "mutate-axle", "section-idx": sectionIdx, "axle-idx": axleIdx, field });
   return `
-    <div class="axle-table-row">
-      <span class="tc muted mono small">${axleIdx + 1}</span>
-      ${textInput(attrs("axleId"), axle.axleId ?? "")}
-      ${numInput(attrs("offset"), axle.offset, "0.001")}
-      ${numInput(attrs("load"), axle.load, "0.001")}
-      ${textInput(attrs("wheelPairId"), axle.wheelPairId ?? "")}
-      ${numInput(attrs("gauge"), axle.gauge, "0.001")}
-      <button class="btn btn-danger btn-xs" data-action="remove-axle" data-section-idx="${sectionIdx}" data-axle-idx="${axleIdx}" title="Remove axle">✕</button>
-    </div>
-    <div class="axle-table-detail">
-      <span class="axle-detail-label muted small">Wheels:</span>
-      <span class="axle-detail-field">
-        <span class="axle-detail-hint">L</span>
-        ${textInput(attrs("leftWheelId"), axle.leftWheelId ?? "")}
-      </span>
-      <span class="axle-detail-field">
-        <span class="axle-detail-hint">R</span>
-        ${textInput(attrs("rightWheelId"), axle.rightWheelId ?? "")}
-      </span>
-    </div>`;
+    <tr>
+      <td class="tc muted mono small">${axleIdx + 1}</td>
+      <td>${textInput(attrs("axleId"), axle.axleId ?? "")}</td>
+      <td>${numInput(attrs("offset"), axle.offset, "0.001")}</td>
+      <td>${numInput(attrs("load"), axle.load, "0.001")}</td>
+      <td>${textInput(attrs("wheelPairId"), axle.wheelPairId ?? "")}</td>
+      <td>${numInput(attrs("gauge"), axle.gauge, "0.001")}</td>
+      <td>${textInput(attrs("leftWheelId"), axle.leftWheelId ?? "")}</td>
+      <td>${textInput(attrs("rightWheelId"), axle.rightWheelId ?? "")}</td>
+      <td class="tc"><button class="btn btn-danger btn-xs" data-action="remove-axle" data-section-idx="${sectionIdx}" data-axle-idx="${axleIdx}" title="Remove axle">✕</button></td>
+    </tr>`;
 }
 
 function renderSectionCard(section, idx, info) {
@@ -201,19 +192,27 @@ function renderSectionCard(section, idx, info) {
 
         <details open data-panel-id="sec-${idx}-axles">
           <summary><span class="summary-chevron">›</span><span class="summary-text">Axle / Wheel Layout</span><span class="summary-count">${axles.length}</span></summary>
-          <div class="axle-table">
-            <div class="axle-table-header">
-              <span class="tc">#</span>
-              <span>Axle ID</span>
-              <span>Offset <span class="unit-tag">(ft)</span></span>
-              <span>Load <span class="unit-tag">(kip)</span></span>
-              <span>Wheel Pair ID</span>
-              <span>Gauge <span class="unit-tag">(in)</span></span>
-              <span></span>
-            </div>
+          <div class="axle-table-wrap">
             ${axles.length === 0
               ? `<p class="muted tc axle-table-empty">No axles in this section. Use + Axle to add one.</p>`
-              : axles.map((a, ai) => renderAxleRow(a, idx, ai)).join("")}
+              : `<table class="data-table data-table-axles">
+              <thead>
+                <tr>
+                  <th class="tc">#</th>
+                  <th>Axle ID</th>
+                  <th>Offset <span class="unit-tag">(ft)</span></th>
+                  <th>Load <span class="unit-tag">(kip)</span></th>
+                  <th>Wheel Pair ID</th>
+                  <th>Gauge <span class="unit-tag">(in)</span></th>
+                  <th>Left Wheel ID</th>
+                  <th>Right Wheel ID</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody>
+                ${axles.map((a, ai) => renderAxleRow(a, idx, ai)).join("")}
+              </tbody>
+            </table>`}
           </div>
         </details>
 
