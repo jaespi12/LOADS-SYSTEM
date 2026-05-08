@@ -1,6 +1,16 @@
 import { esc, fmtNum } from "../utils/format.js";
 import { analyzeTrainModel } from "../utils/train-model.js";
 
+// ── Unit system display ───────────────────────────────────────────────────────
+// Display assumption: US Customary throughout (ft, in, lb, kip).
+// Hardcoded for the current phase. When a dynamic unit system selector is
+// added, replace UNIT_SYSTEM_LABEL / UNIT_SYSTEM_HINT by reading the active
+// unit system from the store/design-basis and mapping to display strings.
+// A corresponding schema/contract for unit systems belongs in shared/schemas/
+// when that feature is scoped.
+const UNIT_SYSTEM_LABEL = "US Customary";
+const UNIT_SYSTEM_HINT = "length: <strong>ft</strong> · gauge: <strong>in</strong> · mass: <strong>lb</strong> · load: <strong>kip</strong>";
+
 // ── Product-facing option labels (no internal codes shown to users) ──────────
 
 const SECTION_TYPE_OPTIONS = [
@@ -44,18 +54,16 @@ function checkboxInput(attrs, checked) {
 }
 
 // ── Unit system bar ───────────────────────────────────────────────────────────
-// Display assumption: US Customary throughout (ft, in, lb, kip).
-// These labels are hardcoded for the current phase of the app. When a dynamic
-// unit system selector is added, this function should read the active unit
-// system from the store/design-basis and map to the appropriate display strings.
+// The unit system bar reads UNIT_SYSTEM_LABEL and UNIT_SYSTEM_HINT defined
+// at the top of this module.
 
 function renderUnitSystemBar() {
   return `
     <div class="unit-system-bar">
       <span class="unit-system-label">Units</span>
-      <span class="unit-system-value">US Customary</span>
+      <span class="unit-system-value">${esc(UNIT_SYSTEM_LABEL)}</span>
       <span class="unit-sep">·</span>
-      <span class="unit-system-hint">length: <strong>ft</strong> · gauge: <strong>in</strong> · mass: <strong>lb</strong> · load: <strong>kip</strong></span>
+      <span class="unit-system-hint">${UNIT_SYSTEM_HINT}</span>
     </div>`;
 }
 
