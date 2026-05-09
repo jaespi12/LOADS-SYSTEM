@@ -31,12 +31,16 @@
 }
 
 .status-pill {
+  display: inline-flex;
+  align-items: center;
   border: 1px solid currentColor;
   border-radius: 999px;
-  padding: 0.2rem 0.65rem;
+  padding: 0.25rem 0.65rem;
   font-size: 0.8rem;
   font-weight: 700;
   letter-spacing: 0.02em;
+  line-height: 1.2;
+  box-sizing: border-box;
 }
 
 .status-ok {
@@ -254,10 +258,11 @@
 /* ── Form / editable inputs ───────────────────────────────────────────────── */
 .form-grid {
   display: grid;
-  grid-template-columns: max-content 1fr;
+  grid-template-columns: max-content minmax(0, 1fr);
   gap: 0.5rem 1rem;
   align-items: center;
   max-width: 600px;
+  min-width: 0;
 }
 
 .field-label {
@@ -294,6 +299,7 @@
   resize: vertical;
   min-height: 4rem;
   vertical-align: top;
+  max-width: 100%;
 }
 
 .field-num {
@@ -461,6 +467,10 @@
   text-overflow: ellipsis;
 }
 
+.summary-card-status .summary-value {
+  overflow: visible;
+}
+
 .kpi-badge {
   display: inline-block;
   font-size: 0.58rem;
@@ -496,8 +506,9 @@
 /* Two-column workspace */
 .train-workspace {
   display: grid;
-  grid-template-columns: minmax(0, 2.1fr) minmax(280px, 1fr);
-  gap: 0.85rem;
+  grid-template-columns: minmax(0, 2.1fr) minmax(320px, 1fr);
+  gap: 1.25rem;
+  align-items: start;
   margin-bottom: 0.85rem;
 }
 
@@ -506,6 +517,12 @@
   display: grid;
   gap: 0.85rem;
   align-content: start;
+  min-width: 0;
+}
+
+/* Ensure every direct child of the workspace columns can shrink */
+.train-workspace-left > *,
+.train-workspace-right > * {
   min-width: 0;
 }
 
@@ -683,6 +700,66 @@
   min-width: 70px;
 }
 
+/* ── Axle Excel-style table ──────────────────────────────────────────────── */
+.axle-table-wrap {
+  overflow-x: auto;
+  margin-top: 0.35rem;
+}
+
+.data-table-axles {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.82rem;
+  white-space: nowrap;
+}
+
+.data-table-axles th,
+.data-table-axles td {
+  padding: 0.18rem 0.4rem;
+  border: 1px solid var(--border);
+  vertical-align: middle;
+}
+
+.data-table-axles thead tr {
+  background: #1f2937;
+  color: var(--muted);
+  font-size: 0.72rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.data-table-axles tbody tr:nth-child(odd) {
+  background: var(--surface);
+}
+
+.data-table-axles tbody tr:nth-child(even) {
+  background: color-mix(in srgb, var(--surface) 80%, var(--bg) 20%);
+}
+
+.data-table-axles tbody tr:hover {
+  background: color-mix(in srgb, var(--accent) 8%, var(--surface) 92%);
+}
+
+.data-table-axles .field-input {
+  padding: 0.18rem 0.35rem;
+  font-size: 0.82rem;
+  border-radius: 2px;
+  height: 1.6rem;
+  box-sizing: border-box;
+}
+
+.data-table-axles .field-num,
+.data-table-axles .field-text {
+  max-width: none;
+  width: 100%;
+  min-width: 60px;
+}
+
+.axle-table-empty {
+  padding: 0.6rem;
+}
+
 /* Tight reference tables (right column + global axle table) */
 .data-table-tight th,
 .data-table-tight td {
@@ -822,6 +899,18 @@
   gap: 0.4rem;
   align-items: center;
   flex-wrap: wrap;
+}
+
+/* Secondary (non-primary, non-danger) buttons in the command bar get a dark surface */
+.project-controls .btn:not(.btn-primary):not(.btn-danger) {
+  background: #1f2937;
+  border-color: #374151;
+  color: var(--text);
+}
+
+.project-controls .btn:not(.btn-primary):not(.btn-danger):hover {
+  background: #374151;
+  border-color: #4b5563;
 }
 
 /* ── Project picker dropdown ──────────────────────────────────────────────── */
@@ -1134,4 +1223,68 @@
 /* ── Status pill scale-up inside summary cards ───────────────────────────── */
 .summary-card-status .status-pill {
   font-size: 0.72rem;
+}
+
+/* ── Unit system bar ─────────────────────────────────────────────────────── */
+.unit-system-bar {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  padding: 0.35rem 0.75rem;
+  margin-bottom: 0.6rem;
+  background: rgba(148, 163, 184, 0.05);
+  border: 1px solid #1f2937;
+  border-radius: 6px;
+  font-size: 0.72rem;
+  color: var(--muted);
+}
+
+.unit-system-label {
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.unit-system-value {
+  color: #e2e8f0;
+  font-weight: 600;
+}
+
+.unit-sep {
+  color: #374151;
+}
+
+.unit-system-hint {
+  color: var(--muted);
+}
+
+.unit-system-hint strong {
+  color: #94a3b8;
+  font-weight: 600;
+}
+
+/* ── Inline unit tag (used in labels and table headers) ──────────────────── */
+.unit-tag {
+  font-size: 0.72em;
+  font-weight: 500;
+  color: #475569;
+  letter-spacing: 0;
+  text-transform: none;
+  vertical-align: baseline;
+}
+
+/* ── Remove native number-input spinner arrows ───────────────────────────── */
+/* Chrome / Edge / Safari */
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+/* Firefox */
+input[type="number"] {
+  -moz-appearance: textfield;
+  appearance: textfield;
 }

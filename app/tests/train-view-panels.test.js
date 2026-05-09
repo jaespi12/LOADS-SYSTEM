@@ -140,4 +140,35 @@ const baseValidation = { valid: true, errors: [] };
   assert.ok(html.includes("summary-chevron"));
 }
 
+// Axle compact table: all axle fields render, single-row Excel-style table present
+{
+  const trainWithAxle = {
+    trainId: "T", trainName: "T",
+    sections: [{ id: "A", length: 10, axles: [{
+      axleId: "A1", offset: 5, load: 10, wheelPairId: "WP-1",
+      gauge: 4.708, leftWheelId: "WL-1", rightWheelId: "WR-1"
+    }] }]
+  };
+  const html = renderTrainView({ train: trainWithAxle, validation: baseValidation });
+  // Excel-style table structure present
+  assert.ok(html.includes('class="data-table data-table-axles"'), "data-table-axles table missing");
+  assert.ok(html.includes('<thead>'), "thead missing");
+  assert.ok(html.includes('<tbody>'), "tbody missing");
+  assert.ok(html.includes('Left Wheel ID'), "Left Wheel ID header missing");
+  assert.ok(html.includes('Right Wheel ID'), "Right Wheel ID header missing");
+  // All field data-* targets present in a single row (no secondary detail row)
+  assert.ok(html.includes('field="axleId"'), 'axleId field missing');
+  assert.ok(html.includes('field="offset"'), 'offset field missing');
+  assert.ok(html.includes('field="load"'), 'load field missing');
+  assert.ok(html.includes('field="wheelPairId"'), 'wheelPairId field missing');
+  assert.ok(html.includes('field="gauge"'), 'gauge field missing');
+  assert.ok(html.includes('field="leftWheelId"'), 'leftWheelId field missing');
+  assert.ok(html.includes('field="rightWheelId"'), 'rightWheelId field missing');
+  // Remove button still present
+  assert.ok(html.includes('data-action="remove-axle"'), 'remove-axle button missing');
+  // No old secondary detail row or stacked card layout
+  assert.ok(!html.includes('axle-table-detail'), 'old axle-table-detail secondary row still present');
+  assert.ok(!html.includes('axle-card'), 'old axle-card stacked layout still present');
+}
+
 console.log("train-view-panels.test.js passed");

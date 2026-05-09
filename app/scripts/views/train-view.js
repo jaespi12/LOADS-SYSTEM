@@ -1,6 +1,16 @@
 import { esc, fmtNum } from "../utils/format.js";
 import { analyzeTrainModel } from "../utils/train-model.js";
 
+// ── Unit system display ───────────────────────────────────────────────────────
+// Display assumption: US Customary throughout (ft, in, lb, kip).
+// Hardcoded for the current phase. When a dynamic unit system selector is
+// added, replace UNIT_SYSTEM_LABEL / UNIT_SYSTEM_HINT by reading the active
+// unit system from the store/design-basis and mapping to display strings.
+// A corresponding schema/contract for unit systems belongs in shared/schemas/
+// when that feature is scoped.
+const UNIT_SYSTEM_LABEL = "US Customary";
+const UNIT_SYSTEM_HINT = "length: <strong>ft</strong> · gauge: <strong>in</strong> · mass: <strong>lb</strong> · load: <strong>kip</strong>";
+
 // ── Product-facing option labels (no internal codes shown to users) ──────────
 
 const SECTION_TYPE_OPTIONS = [
@@ -43,6 +53,20 @@ function checkboxInput(attrs, checked) {
   return `<input type="checkbox" class="field-checkbox" ${dataAttrs(attrs)}${checked ? " checked" : ""}>`;
 }
 
+// ── Unit system bar ───────────────────────────────────────────────────────────
+// The unit system bar reads UNIT_SYSTEM_LABEL and UNIT_SYSTEM_HINT defined
+// at the top of this module.
+
+function renderUnitSystemBar() {
+  return `
+    <div class="unit-system-bar">
+      <span class="unit-system-label">Units</span>
+      <span class="unit-system-value">${esc(UNIT_SYSTEM_LABEL)}</span>
+      <span class="unit-sep">·</span>
+      <span class="unit-system-hint">${UNIT_SYSTEM_HINT}</span>
+    </div>`;
+}
+
 // ── Summary strip (top, full width) ──────────────────────────────────────────
 
 function renderSummaryStrip(train, m, checksOk) {
@@ -75,11 +99,11 @@ function renderSummaryStrip(train, m, checksOk) {
         <div class="summary-value">${m.wheelPairCount}</div>
       </div>
       <div class="summary-card summary-card-calc">
-        <div class="summary-label">Total Train Length ${calcBadge}</div>
+        <div class="summary-label">Total Train Length <span class="unit-tag">(ft)</span> ${calcBadge}</div>
         <div class="summary-value">${fmtNum(m.totalTrainLength)}</div>
       </div>
       <div class="summary-card summary-card-calc">
-        <div class="summary-label">First → Last Wheel ${calcBadge}</div>
+        <div class="summary-label">First → Last Wheel <span class="unit-tag">(ft)</span> ${calcBadge}</div>
         <div class="summary-value">${fmtNum(m.firstToLastWheelDistance)}</div>
       </div>
       <div class="summary-card summary-card-status">
@@ -117,17 +141,18 @@ function renderTrainDetails(train) {
 // ── Section card ─────────────────────────────────────────────────────────────
 
 function renderAxleRow(axle, sectionIdx, axleIdx) {
+  const attrs = (field) => ({ action: "mutate-axle", "section-idx": sectionIdx, "axle-idx": axleIdx, field });
   return `
     <tr>
       <td class="tc muted mono small">${axleIdx + 1}</td>
-      <td>${textInput({ action: "mutate-axle", "section-idx": sectionIdx, "axle-idx": axleIdx, field: "axleId" }, axle.axleId ?? "")}</td>
-      <td>${numInput({ action: "mutate-axle", "section-idx": sectionIdx, "axle-idx": axleIdx, field: "offset" }, axle.offset, "0.001")}</td>
-      <td>${numInput({ action: "mutate-axle", "section-idx": sectionIdx, "axle-idx": axleIdx, field: "load" }, axle.load, "0.001")}</td>
-      <td>${textInput({ action: "mutate-axle", "section-idx": sectionIdx, "axle-idx": axleIdx, field: "wheelPairId" }, axle.wheelPairId ?? "")}</td>
-      <td>${numInput({ action: "mutate-axle", "section-idx": sectionIdx, "axle-idx": axleIdx, field: "gauge" }, axle.gauge, "0.001")}</td>
-      <td>${textInput({ action: "mutate-axle", "section-idx": sectionIdx, "axle-idx": axleIdx, field: "leftWheelId" }, axle.leftWheelId ?? "")}</td>
-      <td>${textInput({ action: "mutate-axle", "section-idx": sectionIdx, "axle-idx": axleIdx, field: "rightWheelId" }, axle.rightWheelId ?? "")}</td>
-      <td><button class="btn btn-danger btn-xs" data-action="remove-axle" data-section-idx="${sectionIdx}" data-axle-idx="${axleIdx}" title="Remove axle">✕</button></td>
+      <td>${textInput(attrs("axleId"), axle.axleId ?? "")}</td>
+      <td>${numInput(attrs("offset"), axle.offset, "0.001")}</td>
+      <td>${numInput(attrs("load"), axle.load, "0.001")}</td>
+      <td>${textInput(attrs("wheelPairId"), axle.wheelPairId ?? "")}</td>
+      <td>${numInput(attrs("gauge"), axle.gauge, "0.001")}</td>
+      <td>${textInput(attrs("leftWheelId"), axle.leftWheelId ?? "")}</td>
+      <td>${textInput(attrs("rightWheelId"), axle.rightWheelId ?? "")}</td>
+      <td class="tc"><button class="btn btn-danger btn-xs" data-action="remove-axle" data-section-idx="${sectionIdx}" data-axle-idx="${axleIdx}" title="Remove axle">✕</button></td>
     </tr>`;
 }
 
@@ -158,59 +183,59 @@ function renderSectionCard(section, idx, info) {
             ${textInput({ action: "mutate-train-section", "section-idx": idx, field: "name" }, section.name ?? "")}
             <label class="field-label">Section Type</label>
             ${selectInput({ action: "mutate-train-section", "section-idx": idx, field: "type" }, section.type ?? "", SECTION_TYPE_OPTIONS)}
-            <label class="field-label">Section Length</label>
+            <label class="field-label">Section Length <span class="unit-tag">(ft)</span></label>
             ${numInput({ action: "mutate-train-section", "section-idx": idx, field: "length" }, section.length, "0.001")}
-            <label class="field-label">Gap to Next Section</label>
+            <label class="field-label">Gap to Next Section <span class="unit-tag">(ft)</span></label>
             ${numInput({ action: "mutate-train-section", "section-idx": idx, field: "gapToNext" }, section.gapToNext ?? 0, "0.001")}
           </div>
         </details>
 
         <details open data-panel-id="sec-${idx}-axles">
           <summary><span class="summary-chevron">›</span><span class="summary-text">Axle / Wheel Layout</span><span class="summary-count">${axles.length}</span></summary>
-          <div class="table-scroll">
-            <table class="data-table data-table-axles">
+          <div class="axle-table-wrap">
+            ${axles.length === 0
+              ? `<p class="muted tc axle-table-empty">No axles in this section. Use + Axle to add one.</p>`
+              : `<table class="data-table data-table-axles">
               <thead>
                 <tr>
                   <th class="tc">#</th>
                   <th>Axle ID</th>
-                  <th>Axle Offset</th>
-                  <th>Axle Load</th>
+                  <th>Offset <span class="unit-tag">(ft)</span></th>
+                  <th>Load <span class="unit-tag">(kip)</span></th>
                   <th>Wheel Pair ID</th>
-                  <th>Gauge</th>
+                  <th>Gauge <span class="unit-tag">(in)</span></th>
                   <th>Left Wheel ID</th>
                   <th>Right Wheel ID</th>
                   <th></th>
                 </tr>
               </thead>
               <tbody>
-                ${axles.length === 0
-                  ? `<tr><td colspan="9" class="muted tc">No axles in this section. Use + Axle to add one.</td></tr>`
-                  : axles.map((a, ai) => renderAxleRow(a, idx, ai)).join("")}
+                ${axles.map((a, ai) => renderAxleRow(a, idx, ai)).join("")}
               </tbody>
-            </table>
+            </table>`}
           </div>
         </details>
 
         <details data-panel-id="sec-${idx}-mass">
           <summary><span class="summary-chevron">›</span><span class="summary-text">Mass &amp; Inertia Inputs</span><span class="summary-tag">not yet used by calculations</span></summary>
           <div class="form-grid form-grid-section">
-            <label class="field-label">Mass</label>
+            <label class="field-label">Mass <span class="unit-tag">(lb)</span></label>
             ${numInput({ action: "mutate-train-section", "section-idx": idx, field: "mass" }, section.mass, "0.001")}
             <label class="field-label">Source</label>
             ${selectInput({ action: "mutate-train-section", "section-idx": idx, field: "dataSource" }, section.dataSource ?? "PENDING", SOURCE_OPTIONS)}
 
-            <label class="field-label">Center of Mass X</label>
+            <label class="field-label">Center of Mass X <span class="unit-tag">(ft)</span></label>
             ${numInput({ action: "mutate-train-section", "section-idx": idx, field: "centerOfMass.x" }, section.centerOfMass?.x, "0.001")}
-            <label class="field-label">Center of Mass Y</label>
+            <label class="field-label">Center of Mass Y <span class="unit-tag">(ft)</span></label>
             ${numInput({ action: "mutate-train-section", "section-idx": idx, field: "centerOfMass.y" }, section.centerOfMass?.y, "0.001")}
-            <label class="field-label">Center of Mass Z</label>
+            <label class="field-label">Center of Mass Z <span class="unit-tag">(ft)</span></label>
             ${numInput({ action: "mutate-train-section", "section-idx": idx, field: "centerOfMass.z" }, section.centerOfMass?.z, "0.001")}
 
-            <label class="field-label">Inertia XX</label>
+            <label class="field-label">Inertia XX <span class="unit-tag">(lb·ft²)</span></label>
             ${numInput({ action: "mutate-train-section", "section-idx": idx, field: "inertia.Ixx" }, section.inertia?.Ixx, "0.001")}
-            <label class="field-label">Inertia YY</label>
+            <label class="field-label">Inertia YY <span class="unit-tag">(lb·ft²)</span></label>
             ${numInput({ action: "mutate-train-section", "section-idx": idx, field: "inertia.Iyy" }, section.inertia?.Iyy, "0.001")}
-            <label class="field-label">Inertia ZZ</label>
+            <label class="field-label">Inertia ZZ <span class="unit-tag">(lb·ft²)</span></label>
             ${numInput({ action: "mutate-train-section", "section-idx": idx, field: "inertia.Izz" }, section.inertia?.Izz, "0.001")}
 
             <label class="field-label">Used in Calculations</label>
@@ -234,17 +259,17 @@ function renderDerivedGeometry(m) {
         <span class="card-header-tag">calculated</span>
       </header>
       <dl class="kv-grid kv-grid-tight">
-        <div><dt>Total Train Length</dt><dd>${fmtNum(m.totalTrainLength)}</dd></div>
-        <div><dt>First → Last Wheel</dt><dd>${fmtNum(m.firstToLastWheelDistance)}</dd></div>
+        <div><dt>Total Train Length <span class="unit-tag">(ft)</span></dt><dd>${fmtNum(m.totalTrainLength)}</dd></div>
+        <div><dt>First → Last Wheel <span class="unit-tag">(ft)</span></dt><dd>${fmtNum(m.firstToLastWheelDistance)}</dd></div>
         <div><dt>Sections</dt><dd>${m.sectionCount}</dd></div>
         <div><dt>Axles</dt><dd>${m.axleCount}</dd></div>
         <div><dt>Wheel Pairs</dt><dd>${m.wheelPairCount}</dd></div>
-        <div><dt>Section Length Σ</dt><dd>${fmtNum(m.sectionLengthSum)}</dd></div>
-        <div><dt>Inter-section Gap Σ</dt><dd>${fmtNum(m.interSectionGapSum)}</dd></div>
+        <div><dt>Section Length Σ <span class="unit-tag">(ft)</span></dt><dd>${fmtNum(m.sectionLengthSum)}</dd></div>
+        <div><dt>Inter-section Gap Σ <span class="unit-tag">(ft)</span></dt><dd>${fmtNum(m.interSectionGapSum)}</dd></div>
       </dl>
       <h4 class="subhead">Section Start &amp; End Positions</h4>
       <table class="data-table data-table-tight">
-        <thead><tr><th>Section</th><th>Start</th><th>End</th><th>Gap to Next</th></tr></thead>
+        <thead><tr><th>Section</th><th>Start <span class="unit-tag">(ft)</span></th><th>End <span class="unit-tag">(ft)</span></th><th>Gap to Next <span class="unit-tag">(ft)</span></th></tr></thead>
         <tbody>
           ${m.sections.length === 0
             ? `<tr><td colspan="4" class="muted tc">No sections defined yet.</td></tr>`
@@ -371,11 +396,11 @@ function renderAxlePositionTable(m) {
               <th class="tc">#</th>
               <th>Axle ID</th>
               <th>Section</th>
-              <th>Offset</th>
-              <th>Global Position</th>
+              <th>Offset <span class="unit-tag">(ft)</span></th>
+              <th>Global Position <span class="unit-tag">(ft)</span></th>
               <th>Wheel Pair ID</th>
-              <th>Gauge</th>
-              <th>Load</th>
+              <th>Gauge <span class="unit-tag">(in)</span></th>
+              <th>Load <span class="unit-tag">(kip)</span></th>
             </tr>
           </thead>
           <tbody>
@@ -411,6 +436,7 @@ export function renderTrainView({ train, validation }) {
   const checksOk = (validation?.valid ?? true) && blockingCount === 0;
 
   return `
+    ${renderUnitSystemBar()}
     ${renderSummaryStrip(train, m, checksOk)}
 
     <div class="train-workspace">
